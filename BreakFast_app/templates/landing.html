@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreakFast</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" type="image/png" href="{% static 'images/bficon.png' %}">
+    <style>
+        body {
+            background-color: #F3A9A8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-white py-3 shadow-sm">
+        <nav class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'home' %}" class="text-decoration-none" style="font-family: 'Brush Script MT', 'Comic Sans MS', cursive; font-size: 1.8em; color: #d81b60;">BreakFast</a>
+                <div class="d-flex align-items-center gap-4">
+                    <a href="#about" class="text-decoration-none" style="color: #964b4b; font-weight: bold;">About</a>
+                    <a href="#contact" class="text-decoration-none" style="color: #964b4b; font-weight: bold;">Contact us</a>
+                    <div class="d-flex gap-2">
+                        <button onclick="redirectToLogin()" class="btn" style="border: 2px solid #d81b60; color: #d81b60; transition: all 0.3s ease;">Log In</button>
+                        <button onclick="redirectToSignup()" class="btn" style="background-color: #F3A9A8; color: white; border: none; transition: all 0.3s ease;">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow-1 d-flex align-items-center justify-content-center py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow-lg" style="border-radius: 1rem;">
+                        <div class="card-body p-5 text-center">
+                            <h1 class="display-4 mb-4" style="color: #333;">
+                                Welcome to <br>
+                                <span style="color: #d81b60;">BreakFast</span><br>
+                                Your Ultimate Intermittent Fasting Companion
+                            </h1>
+                            <p class="lead mb-0" style="color: #555;">
+                                Take control of your health and wellness journey with BreakFast, 
+                                the all-in-one digital tool designed to make intermittent fasting 
+                                (IF) easier, more effective, and tailored to your lifestyle. 
+                                Whether you're a beginner or an experienced faster, our app 
+                                provides everything you need to succeed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function redirectToLogin() {
+            window.location.href = "{% url 'login' %}";
+        }
+
+        function redirectToSignup() {
+            window.location.href = "{% url 'signup' %}";
+        }
+    </script>
+</body>
+</html>

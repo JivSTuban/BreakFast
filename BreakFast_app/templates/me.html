@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Me{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(to bottom, #ffffff, #F3A9A8); min-height: calc(100vh - 56px);">
+    <div class="container">
+        <div class="row">
+            <!-- Left Section -->
+            <div class="col-md-4 position-relative">
+                <h1 class="display-4 fw-bold mb-2">Hello</h1>
+                <h2 class="display-5 mb-4" style="color: #d81b60;">{{ user.first_name|default:"Athena" }}</h2>
+                
+                <div class="position-relative mb-4" style="aspect-ratio: 1;">
+                    <img src="{% static 'images/ategurl_nbg.png' %}" alt="Fitness illustration" class="img-fluid w-100 h-100" style="object-fit: contain;">
+                </div>
+                
+                <a href="{% url 'personalinfo' %}" class="position-absolute bottom-0 start-0 p-3" style="color: #555; transition: color 0.3s ease;">
+                    <i class="fas fa-cog fa-lg"></i>
+                </a>
+            </div>
+
+            <!-- Right Section -->
+            <div class="col-md-8">
+                <h3 class="display-5 fw-bold mb-4">October</h3>
+                
+                <!-- Calendar -->
+                <div class="row g-3 mb-5 text-center">
+                    {% for day in weekdays %}
+                        <div class="col">
+                            <div class="fw-medium text-muted">{{ day }}</div>
+                        </div>
+                    {% endfor %}
+                    
+                    {% for date in dates %}
+                        <div class="col">
+                            <div class="fs-4 fw-bold {% if date == highlighted_date %}rounded-3 p-2{% endif %}" 
+                                 style="{% if date == highlighted_date %}background-color: #F3A9A8;{% endif %}">
+                                {{ date }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Fasting Card -->
+                <div class="card shadow-lg rounded-4">
+                    <div class="card-body p-0">
+                        <div class="p-4 mb-4" style="background-color: #F3A9A8; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                            <h4 class="fs-4 fw-medium mb-3">You are fasting today for</h4>
+                            <p class="display-4 fw-bold mb-0">3 hours</p>
+                        </div>
+
+                        <div class="px-4 pb-4">
+                            <div class="row align-items-center">
+                                <!-- Progress Circle -->
+                                <div class="col-auto">
+                                    <div class="position-relative" style="width: 120px; height: 120px;">
+                                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                            <div class="fs-4 fw-bold mb-1">12.5%</div>
+                                            <div class="text-muted">Progress</div>
+                                        </div>
+                                        <svg class="position-absolute top-0 start-0" viewBox="0 0 36 36" width="120" height="120">
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                  fill="none"
+                                                  stroke="#F3A9A8"
+                                                  stroke-width="2"
+                                                  stroke-dasharray="12.5, 100"
+                                                  style="transform: rotate(-90deg); transform-origin: center;"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Stats -->
+                                <div class="col">
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
+                                                <div class="text-muted mb-1">Start Time</div>
+                                                <div class="fs-5 fw-bold">6:00 AM</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
+                                                <div class="text-muted mb-1">End Time</div>
+                                                <div class="fs-5 fw-bold">9:00 AM</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
+                                                <div class="text-muted mb-1">Calories Burned</div>
+                                                <div class="fs-5 fw-bold">150 kcal</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
+                                                <div class="text-muted mb-1">Water Intake</div>
+                                                <div class="fs-5 fw-bold">500 ml</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

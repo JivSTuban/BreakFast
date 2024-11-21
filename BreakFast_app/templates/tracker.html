@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="icon" type="image/png" href="{% static 'images/bficon.png' %}">
+<style>
+    .timer-progress { transform: rotate(-90deg); }
+    .timer-progress circle { transition: stroke-dashoffset 0.5s ease-in-out; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Timer Display -->
+            <div class="text-center mb-4">
+                <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                    <svg class="timer-progress" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+                        <circle cx="50" cy="50" r="45" 
+                            style="fill: none; stroke: #f3f3f3; stroke-width: 8;"/>
+                        <circle cx="50" cy="50" r="45" 
+                            style="fill: none; stroke: #d81b60; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: calc(283 - ({{ progress_percentage|default:0|multiply:2.83 }}));"/>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="font-size: 2em; color: #333;">
+                            <span id="timer-hours">00</span>:<span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
+                        </div>
+                        <div style="font-size: 1em; color: #666; margin-top: 5px;">
+                            {% if active_fast.is_paused %}Paused{% else %}Remaining{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer Controls -->
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                {% if active_fast %}
+                    {% if active_fast.is_paused %}
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="resume">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-play me-2"></i>Resume Fast
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="pause">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-pause me-2"></i>Pause Fast
+                            </button>
+                        </form>
+                    {% endif %}
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="stop">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-stop me-2"></i>End Fast
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="start">
+                        <input type="hidden" name="plan_id" value="{{ active_plan.id }}">
+                        <button type="submit" class="btn btn-primary" {% if not active_plan %}disabled{% endif %}>
+                            {% if active_plan %}<i class="fas fa-play me-2"></i>Start Fast{% else %}<i class="fas fa-play me-2"></i>Select a Plan First{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- Fasting Information -->
+            <div class="row g-4 mb-4">
+                <!-- Current Plan Card -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary mb-3">Current Plan</h5>
+                            {% if active_fast %}
+                                <p class="card-text mb-2">{{ active_fast.plan.name }}</p>
+                                {% if active_fast.plan.plan_type == '5:2' %}
+                                    <p class="card-text text-muted small">
+                                        Fast: {{ active_fast.plan.fasting_days }} days | 
+                                        Eat: {{ active_fast.plan.eating_days }} days
+                                    </p>
+                                {% else %}
+                                    <p class="card-text text-muted small">
+                                        Fast: {{ active_fast.plan.fasting_hours }}h | 
+                                        Eat: {{ active_fast.plan.eating_hours }}h
+                                    </p>
+                                {% endif %}
+                            {% elif active_plan %}
+                                <p class="card-text mb-2">{{ active_plan.name }}</p>
+                                {% if active_plan.plan_type == '5:2' %}
+                                    <p class="card-text text-muted small">
+                                        Fast: {{ active_plan.fasting_days }} days | 
+                                        Eat: {{ active_plan.eating_days }} days
+                                    </p>
+                                {% else %}
+                                    <p class="card-text text-muted small">
+                                        Fast: {{ active_plan.fasting_hours }}h | 
+                                        Eat: {{ active_plan.eating_hours }}h
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                <p class="card-text text-muted">No active plan</p>
+                                <a href="{% url 'plan' %}" class="btn btn-primary">Choose Plan</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Streak Card -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary mb-3">Current Streak</h5>
+                            <p class="card-text">
+                                <span class="h3 text-success">{{ streak_days }}</span>
+                                <span class="text-muted ms-2">days</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood and Energy Tracking -->
+            {% if active_fast and not active_fast.is_paused %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary mb-3">Track Your Well-being</h5>
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_mood">
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Mood</label>
+                            <select name="mood" class="form-select">
+                                <option value="">Select Mood</option>
+                                {% for value, label in mood_choices %}
+                                <option value="{{ value }}" {% if active_fast.mood == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Energy Level</label>
+                            <select name="energy" class="form-select">
+                                <option value="">Select Energy Level</option>
+                                {% for value, label in energy_choices %}
+                                <option value="{{ value }}" {% if active_fast.energy_level == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="3" 
+                                placeholder="How are you feeling?">{{ active_fast.notes }}</textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Tracking
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateTimer(endTime) {
+    const end = new Date(endTime).getTime();
+    const now = new Date().getTime();
+    const distance = end - now;
+
+    if (distance < 0) {
+        document.getElementById('timer-hours').textContent = '00';
+        document.getElementById('timer-minutes').textContent = '00';
+        document.getElementById('timer-seconds').textContent = '00';
+        return;
+    }
+
+    const hours = Math.floor(distance / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    document.getElementById('timer-hours').textContent = hours.toString().padStart(2, '0');
+    document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
+}
+
+{% if active_fast and not active_fast.is_paused %}
+    const endTime = "{{ active_fast.end_time|date:'c' }}";
+    setInterval(() => updateTimer(endTime), 1000);
+    updateTimer(endTime);  // Initial update
+{% endif %}
+</script>
+{% endblock %}

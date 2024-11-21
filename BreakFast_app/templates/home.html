@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="background-image: url('{% static 'images/healthyfood.png' %}'); background-size: cover; background-position: 300px center; background-repeat: no-repeat; min-height: 100vh;">
+    <div class="row">
+        <div class="col-md-6">
+            <section class="hero p-5" style="background-color: #fff; border-radius: 12px; margin: 2rem; height: calc(100vh - 4rem);">
+                <div style="max-width: 600px;">
+                    <h1 class="display-3 fw-bold mb-4" style="color: #000;">UNLOCK FLEXIBILITY WITH INTERMITTENT FASTING</h1>
+                    <p class="lead mb-4" style="color: #555;">A comprehensive digital tool designed to help individuals manage and optimize their intermittent fasting (IF) routine.</p>
+                    <a href="{% url 'tracker' %}" class="btn btn-lg" style="background-color: #F3A9A8; color: #fff; transition: all 0.3s ease;">Let's try</a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6">
+            <section class="features p-5">
+                <div class="row g-4">
+                    <div class="col-6">
+                        <div class="card h-100" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px; transition: transform 0.3s ease;">
+                            <div class="card-body text-center p-4">
+                                <h2 class="display-6 fw-bold mb-3" style="color: #d81b60;">16:8</h2>
+                                <p class="mb-0">16 hours fasting, 8 hours eating window</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card h-100" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px; transition: transform 0.3s ease;">
+                            <div class="card-body text-center p-4">
+                                <h2 class="display-6 fw-bold mb-3" style="color: #d81b60;">18:6</h2>
+                                <p class="mb-0">18 hours fasting, 6 hours eating window</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card h-100" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px; transition: transform 0.3s ease;">
+                            <div class="card-body text-center p-4">
+                                <h2 class="display-6 fw-bold mb-3" style="color: #d81b60;">20:4</h2>
+                                <p class="mb-0">20 hours fasting, 4 hours eating window</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card h-100" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 12px; transition: transform 0.3s ease;">
+                            <div class="card-body text-center p-4">
+                                <h2 class="display-6 fw-bold mb-3" style="color: #d81b60;">5:2</h2>
+                                <p class="mb-0">5 days normal eating, 2 days fasting</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
