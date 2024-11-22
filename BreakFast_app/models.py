@@ -48,19 +48,16 @@ class FastingPlan(models.Model):
 
 class FastingTracker(models.Model):
     MOOD_CHOICES = [
-        ('GREAT', 'Great'),
-        ('GOOD', 'Good'),
-        ('OKAY', 'Okay'),
-        ('BAD', 'Bad'),
-        ('TERRIBLE', 'Terrible')
+        (1, 'Bad'),
+        (2, 'Okay'),
+        (3, 'Good')
     ]
     
     ENERGY_CHOICES = [
         (1, 'Very Low'),
         (2, 'Low'),
         (3, 'Medium'),
-        (4, 'High'),
-        (5, 'Very High')
+        (4, 'High')
     ]
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -68,7 +65,7 @@ class FastingTracker(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     completed = models.BooleanField(default=False)
-    mood = models.CharField(max_length=20, choices=MOOD_CHOICES, null=True, blank=True)
+    mood = models.IntegerField(choices=MOOD_CHOICES, null=True, blank=True)
     energy_level = models.IntegerField(choices=ENERGY_CHOICES, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     actual_end_time = models.DateTimeField(null=True, blank=True)  # In case user ends early

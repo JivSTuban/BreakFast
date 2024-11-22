@@ -2,215 +2,466 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}Tracker{% endblock %}
+{% block title %}BreakFast | Tracker{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <link rel="icon" type="image/png" href="{% static 'images/bficon.png' %}">
+<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
 <style>
-    .timer-progress { transform: rotate(-90deg); }
-    .timer-progress circle { transition: stroke-dashoffset 0.5s ease-in-out; }
+    :root {
+        --primary-pink: #E5B5B5;
+        --dark-brown: #4A3434;
+        --light-gray: #E5E5E5;
+    }
+
+    body {
+        font-family: 'Arial', sans-serif;
+        color: var(--dark-brown);
+        background: linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)), 
+                    url("{% static 'images/healthyfood.png' %}") no-repeat center center fixed !important;
+        background-size: cover !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    body::before {
+        display: none;
+    }
+
+    .card {
+        background-color: rgba(229, 181, 181, 0.97) !important;
+        border-radius: 25px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .card h2 {
+        font-family: 'Arial', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--dark-brown);
+        margin-bottom: 1.5rem;
+        text-transform: capitalize;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .card h2 i {
+        font-size: 1.25em;
+        color: var(--dark-brown);
+        opacity: 0.9;
+    }
+
+    .timer {
+        font-size: 3.5rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .mood-icons {
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .mood-icons i {
+        transition: color 0.2s;
+        cursor: pointer;
+    }
+
+    .mood-icons i:hover,
+    .mood-icons i.selected {
+        color: #4A3434;
+    }
+
+    .energy-icons {
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .energy-icons i {
+        transition: color 0.2s;
+        cursor: pointer;
+    }
+
+    .energy-icons i:hover,
+    .energy-icons i.selected {
+        color: #4A3434;
+    }
+
+    .btn-custom {
+        background-color: var(--light-gray);
+        border: none;
+        padding: 10px 30px;
+        border-radius: 15px;
+        transition: background-color 0.3s;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .btn-custom:hover {
+        background-color: #d0d0d0;
+    }
+
+    .timer-progress { 
+        transform: rotate(-90deg); 
+    }
+    
+    .timer-progress circle { 
+        transition: stroke-dashoffset 0.5s ease-in-out; 
+    }
+
+    .stat-section {
+        margin-bottom: 2rem;
+    }
+
+    .stat-section h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .input-group label {
+        font-size: 1rem;
+        font-weight: 400;
+        margin-bottom: 0;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <!-- Timer Display -->
-            <div class="text-center mb-4">
-                <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
-                    <svg class="timer-progress" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
-                        <circle cx="50" cy="50" r="45" 
-                            style="fill: none; stroke: #f3f3f3; stroke-width: 8;"/>
-                        <circle cx="50" cy="50" r="45" 
-                            style="fill: none; stroke: #d81b60; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: calc(283 - ({{ progress_percentage|default:0|multiply:2.83 }}));"/>
-                    </svg>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                        <div style="font-size: 2em; color: #333;">
-                            <span id="timer-hours">00</span>:<span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
-                        </div>
-                        <div style="font-size: 1em; color: #666; margin-top: 5px;">
-                            {% if active_fast.is_paused %}Paused{% else %}Remaining{% endif %}
-                        </div>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Timer Display -->
+        <div class="col-12 text-center mb-4">
+            <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                <svg class="timer-progress" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+                    <circle cx="50" cy="50" r="45" 
+                        style="fill: none; stroke: #f3f3f3; stroke-width: 8;"/>
+                    <circle cx="50" cy="50" r="45" 
+                        style="fill: none; stroke: #d81b60; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: calc(283 - ({{ progress_percentage|default:0|multiply:2.83 }}));"/>
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                    <div class="timer">
+                        <span id="timer-hours">00</span>:<span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
+                    </div>
+                    <div style="font-size: 1em; color: #666; margin-top: 5px;">
+                        {% if active_fast.is_paused %}Paused{% else %}Remaining{% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- Timer Controls -->
-            <div class="d-flex justify-content-center gap-2 mb-4">
+            <div class="d-flex justify-content-center gap-3 mt-3">
                 {% if active_fast %}
                     {% if active_fast.is_paused %}
                         <form method="post" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="resume">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-play me-2"></i>Resume Fast
+                            <button type="submit" class="btn btn-custom">
+                                <i class="fas fa-play me-2"></i>Resume
                             </button>
                         </form>
                     {% else %}
                         <form method="post" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="pause">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-pause me-2"></i>Pause Fast
+                            <button type="submit" class="btn btn-custom">
+                                <i class="fas fa-pause me-2"></i>Pause
                             </button>
                         </form>
                     {% endif %}
                     <form method="post" class="d-inline">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="stop">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-stop me-2"></i>End Fast
+                        <button type="submit" class="btn btn-custom">
+                            <i class="fas fa-stop me-2"></i>Stop
                         </button>
                     </form>
                 {% else %}
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="start">
+                        {% if active_plan %}
                         <input type="hidden" name="plan_id" value="{{ active_plan.id }}">
-                        <button type="submit" class="btn btn-primary" {% if not active_plan %}disabled{% endif %}>
-                            {% if active_plan %}<i class="fas fa-play me-2"></i>Start Fast{% else %}<i class="fas fa-play me-2"></i>Select a Plan First{% endif %}
+                        {% endif %}
+                        <button type="submit" class="btn btn-custom" {% if not active_plan %}disabled{% endif %}>
+                            <i class="fas fa-play me-2"></i>Start Fast
                         </button>
                     </form>
                 {% endif %}
             </div>
-
-            <!-- Fasting Information -->
-            <div class="row g-4 mb-4">
-                <!-- Current Plan Card -->
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary mb-3">Current Plan</h5>
-                            {% if active_fast %}
-                                <p class="card-text mb-2">{{ active_fast.plan.name }}</p>
-                                {% if active_fast.plan.plan_type == '5:2' %}
-                                    <p class="card-text text-muted small">
-                                        Fast: {{ active_fast.plan.fasting_days }} days | 
-                                        Eat: {{ active_fast.plan.eating_days }} days
-                                    </p>
-                                {% else %}
-                                    <p class="card-text text-muted small">
-                                        Fast: {{ active_fast.plan.fasting_hours }}h | 
-                                        Eat: {{ active_fast.plan.eating_hours }}h
-                                    </p>
-                                {% endif %}
-                            {% elif active_plan %}
-                                <p class="card-text mb-2">{{ active_plan.name }}</p>
-                                {% if active_plan.plan_type == '5:2' %}
-                                    <p class="card-text text-muted small">
-                                        Fast: {{ active_plan.fasting_days }} days | 
-                                        Eat: {{ active_plan.eating_days }} days
-                                    </p>
-                                {% else %}
-                                    <p class="card-text text-muted small">
-                                        Fast: {{ active_plan.fasting_hours }}h | 
-                                        Eat: {{ active_plan.eating_hours }}h
-                                    </p>
-                                {% endif %}
-                            {% else %}
-                                <p class="card-text text-muted">No active plan</p>
-                                <a href="{% url 'plan' %}" class="btn btn-primary">Choose Plan</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Streak Card -->
-                <div class="col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary mb-3">Current Streak</h5>
-                            <p class="card-text">
-                                <span class="h3 text-success">{{ streak_days }}</span>
-                                <span class="text-muted ms-2">days</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mood and Energy Tracking -->
-            {% if active_fast and not active_fast.is_paused %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title text-primary mb-3">Track Your Well-being</h5>
-                    <form method="post" class="row g-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="update_mood">
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Mood</label>
-                            <select name="mood" class="form-select">
-                                <option value="">Select Mood</option>
-                                {% for value, label in mood_choices %}
-                                <option value="{{ value }}" {% if active_fast.mood == value %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Energy Level</label>
-                            <select name="energy" class="form-select">
-                                <option value="">Select Energy Level</option>
-                                {% for value, label in energy_choices %}
-                                <option value="{{ value }}" {% if active_fast.energy_level == value %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label">Notes</label>
-                            <textarea name="notes" class="form-control" rows="3" 
-                                placeholder="How are you feeling?">{{ active_fast.notes }}</textarea>
-                        </div>
-                        
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Update Tracking
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% endif %}
         </div>
+
+        <!-- Fasting Plan -->
+        <div class="col-md-6">
+            <div class="card">
+                <h2><i class="far fa-calendar"></i> Fasting Plan</h2>
+                <p class="mb-2">Your current plan is:</p>
+                {% if active_plan %}
+                    {% if active_plan.plan_type == '5:2' %}
+                        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                            <div class="bg-light p-3 rounded">
+                                <span class="fasting-numbers">{{ active_plan.fasting_days }}</span>
+                                <div>Days<br>Fasting</div>
+                            </div>
+                            <span class="fasting-numbers">:</span>
+                            <div class="bg-dark text-white p-3 rounded">
+                                <span class="fasting-numbers">{{ active_plan.eating_days }}</span>
+                                <div>Days<br>Eating<br>Window</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                            <div class="bg-light p-3 rounded">
+                                <span class="fasting-numbers">{{ active_plan.fasting_hours }}</span>
+                                <div>Hours<br>Fasting</div>
+                            </div>
+                            <span class="fasting-numbers">:</span>
+                            <div class="bg-dark text-white p-3 rounded">
+                                <span class="fasting-numbers">{{ active_plan.eating_hours }}</span>
+                                <div>Hours<br>Eating<br>Window</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p>No fasting plan selected yet. Please choose one.</p>
+                {% endif %}
+                <a href="{% url 'plan' %}" class="btn btn-custom">
+                    <i class="fas fa-edit"></i> Edit Plan
+                </a>
+            </div>
+        </div>
+
+        <!-- Fast Time Record -->
+        <div class="col-md-6">
+            <div class="card">
+                <h2><i class="far fa-clock"></i> Fast Time Record</h2>
+                <div class="text-center my-4">
+                    <h3>Time Until Next Meal</h3>
+                    {% if active_fast %}
+                        {% if active_fast.is_paused %}
+                            <span class="h3 text-warning">Paused</span>
+                        {% else %}
+                            <span class="h3 text-success" id="remaining-hours">{{ remaining_hours|floatformat:1 }}</span>
+                            <span class="text-muted ms-2">hours</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="h3 text-muted">--</span>
+                        <span class="text-muted ms-2">hours</span>
+                    {% endif %}
+                </div>
+                <p class="text-center">{% if active_fast %}Getting there...{% else %}Start a fast to begin tracking{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Physiological Stat -->
+        {% if active_fast and not active_fast.is_paused %}
+        <div class="col-md-6">
+            <div class="card">
+                <h2><i class="fas fa-heartbeat"></i> Physiological Stats</h2>
+                <div class="stat-section">
+                    <h3>Mood</h3>
+                    <div class="mood-icons">
+                        <i class="fas fa-angry" data-value="1" style="color: {% if mood == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 1)"></i>
+                        <i class="fas fa-frown" data-value="2" style="color: {% if mood == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 2)"></i>
+                        <i class="fas fa-meh" data-value="3" style="color: {% if mood == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 3)"></i>
+                        <i class="fas fa-smile" data-value="4" style="color: {% if mood == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 4)"></i>
+                        <i class="fas fa-laugh-beam" data-value="5" style="color: {% if mood == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 5)"></i>
+                    </div>
+                </div>
+                <div class="stat-section">
+                    <h3>Energy Level</h3>
+                    <div class="energy-icons">
+                        <i class="fas fa-battery-empty" data-value="1" style="color: {% if energy == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 1)"></i>
+                        <i class="fas fa-battery-quarter" data-value="2" style="color: {% if energy == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 2)"></i>
+                        <i class="fas fa-battery-half" data-value="3" style="color: {% if energy == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 3)"></i>
+                        <i class="fas fa-battery-three-quarters" data-value="4" style="color: {% if energy == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 4)"></i>
+                        <i class="fas fa-battery-full" data-value="5" style="color: {% if energy == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 5)"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sleep Cycle -->
+        <div class="col-md-6">
+            <div class="card">
+                <h2><i class="fas fa-moon"></i> Sleep Cycle</h2>
+                <div class="sleep-inputs">
+                    <div class="input-group">
+                        <input type="number" id="sleep_hours" min="0" max="23" value="{{ sleep_hours|default:0 }}" class="form-control">
+                        <label>hours</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="sleep_minutes" min="0" max="59" value="{{ sleep_minutes|default:0 }}" class="form-control">
+                        <label>minutes</label>
+                    </div>
+                </div>
+                <div id="sleep-feedback" class="text-success mt-2"></div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function updateTimer(endTime) {
-    const end = new Date(endTime).getTime();
-    const now = new Date().getTime();
-    const distance = end - now;
-
-    if (distance < 0) {
-        document.getElementById('timer-hours').textContent = '00';
-        document.getElementById('timer-minutes').textContent = '00';
-        document.getElementById('timer-seconds').textContent = '00';
-        return;
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
-    const hours = Math.floor(distance / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    // Handle physiological stat updates
+    function updatePhysiologicalStat(type, value) {
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append(type, value);
 
-    document.getElementById('timer-hours').textContent = hours.toString().padStart(2, '0');
-    document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
-    document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
-}
+        fetch('{% url "update_physiological_stats" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update UI to show selected state
+                if (type === 'mood') {
+                    document.querySelectorAll('.mood-icons i').forEach(icon => {
+                        icon.style.color = icon.dataset.value == value ? '#4A3434' : '#999';
+                    });
+                } else if (type === 'energy') {
+                    document.querySelectorAll('.energy-icons i').forEach(icon => {
+                        icon.style.color = icon.dataset.value == value ? '#4A3434' : '#999';
+                    });
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
 
-{% if active_fast and not active_fast.is_paused %}
-    const endTime = "{{ active_fast.end_time|date:'c' }}";
-    setInterval(() => updateTimer(endTime), 1000);
-    updateTimer(endTime);  // Initial update
-{% endif %}
+    // Handle sleep cycle updates
+    function updateSleepCycle() {
+        const hours = document.getElementById('sleep_hours').value;
+        const minutes = document.getElementById('sleep_minutes').value;
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('sleep_hours', hours);
+        formData.append('sleep_minutes', minutes);
+
+        fetch('{% url "update_sleep_cycle" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Show success feedback (optional)
+                const sleepFeedback = document.getElementById('sleep-feedback');
+                if (sleepFeedback) {
+                    sleepFeedback.textContent = 'Sleep cycle updated!';
+                    setTimeout(() => {
+                        sleepFeedback.textContent = '';
+                    }, 2000);
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mood icons
+        document.querySelectorAll('.mood-icons i').forEach(icon => {
+            icon.addEventListener('click', function() {
+                updatePhysiologicalStat('mood', this.dataset.value);
+            });
+        });
+
+        // Energy icons
+        document.querySelectorAll('.energy-icons i').forEach(icon => {
+            icon.addEventListener('click', function() {
+                updatePhysiologicalStat('energy', this.dataset.value);
+            });
+        });
+
+        // Sleep inputs
+        const sleepInputs = document.querySelectorAll('#sleep_hours, #sleep_minutes');
+        let timeoutId;
+        sleepInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(updateSleepCycle, 500); // Debounce the update
+            });
+        });
+    });
+
+    function updateTimer(endTime) {
+        const end = new Date(endTime).getTime();
+        const now = new Date().getTime();
+        const distance = end - now;
+
+        if (distance < 0) {
+            document.getElementById('timer-hours').textContent = '00';
+            document.getElementById('timer-minutes').textContent = '00';
+            document.getElementById('timer-seconds').textContent = '00';
+            document.getElementById('remaining-hours').textContent = '0.0';
+            return;
+        }
+
+        const hours = Math.floor(distance / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Update timer display
+        document.getElementById('timer-hours').textContent = hours.toString().padStart(2, '0');
+        document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
+        
+        // Update remaining hours
+        const remainingHours = distance / (1000 * 60 * 60);
+        document.getElementById('remaining-hours').textContent = remainingHours.toFixed(1);
+        
+        // Update progress circle
+        const totalDuration = {{ active_fast.end_time|date:'U'|default:0 }} - {{ active_fast.start_time|date:'U'|default:0 }};
+        const elapsed = now / 1000 - {{ active_fast.start_time|date:'U'|default:0 }};
+        const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+        const circle = document.querySelector('.timer-progress circle:last-child');
+        circle.style.strokeDashoffset = `calc(283 - (${progress} * 2.83))`;
+    }
+
+    {% if active_fast and not active_fast.is_paused %}
+        const endTime = "{{ active_fast.end_time|date:'c' }}";
+        setInterval(() => updateTimer(endTime), 1000);
+    {% endif %}
 </script>
 {% endblock %}

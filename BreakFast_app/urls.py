@@ -14,4 +14,6 @@ urlpatterns = [
     path('personalinfo/', views.personalinfo, name='personalinfo'),
     path('accountinfo/', views.accountinfo, name='accountinfo'),
     path('logout/', views.logout_view, name='logout'),
+    path('update_physiological_stats/', views.update_physiological_stats, name='update_physiological_stats'),
+    path('update_sleep_cycle/', views.update_sleep_cycle, name='update_sleep_cycle'),
 ]

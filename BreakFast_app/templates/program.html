@@ -1,52 +1,185 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Program{% endblock %}
+{% block title %}BreakFast | Program{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        color: var(--dark-brown);
+        background: linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)), 
+                    url("{% static 'images/healthyfood.png' %}") no-repeat center center fixed !important;
+        background-size: cover !important;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-title {
+        font-family: 'Arial', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        color: var(--dark-brown);
+        text-align: center;
+        margin: 3rem 0;
+        text-transform: capitalize;
+    }
+
+    .program-card {
+        background-color: rgba(229, 181, 181, 0.97) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 25px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .program-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .program-title {
+        font-size: 2.25rem;
+        font-weight: 600;
+        color: var(--dark-brown);
+        margin: 1.5rem 0;
+        text-align: center;
+    }
+
+    .program-text {
+        font-size: 1.25rem;
+        color: var(--dark-brown);
+        margin-bottom: 2rem;
+        text-align: center;
+        line-height: 1.6;
+    }
+
+    .btn-custom {
+        background-color: var(--dark-brown) !important;
+        color: white !important;
+        border: none !important;
+        padding: 1rem 2rem !important;
+        border-radius: 15px !important;
+        font-weight: 500 !important;
+        font-size: 1.1rem !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .link-custom {
+        color: var(--dark-brown);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+        display: inline-block;
+        padding: 0.5rem 0;
+    }
+
+    .link-custom:hover {
+        color: #6b4c4c;
+    }
+
+    .program-image {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .program-card:hover .program-image {
+        transform: scale(1.05);
+    }
+
+    .container {
+        max-width: 1400px;
+        padding: 0 2rem;
+    }
+
+    .program-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .program-actions {
+        width: 100%;
+        margin-top: auto;
+    }
+
+    @media (min-width: 992px) {
+        .row {
+            margin: 0 -1.5rem;
+        }
+        .col-md-4 {
+            padding: 0 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container">
+    <h1 class="page-title">Choose Your Program</h1>
+
     <div class="row g-4">
         <!-- Beginner Program -->
         <div class="col-md-4">
-            <div class="card h-100" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
-                <div class="card-body text-center p-4">
-                    <img src="{% static 'images/beginner.png' %}" alt="Beginner" class="img-fluid mb-4" style="max-width: 150px;">
-                    <h3 class="card-title h4 mb-3" style="color: #d81b60; font-weight: bold;">BEGINNER</h3>
-                    <p class="card-text mb-4" style="color: #555;">Step-by-step guides for people new to intermittent fasting, with gradual increase in fasting periods.</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary mb-2" style="background-color: #F3A9A8; border: none; transition: all 0.3s ease;">View Guide</button>
-                        <a href="#" class="text-decoration-none" style="color: #d81b60; transition: color 0.3s ease;">See Info</a>
-                    </div>
+            <div class="program-card">
+                <div class="program-content">
+                    <img src="{% static 'images/beginner.png' %}" alt="Beginner" class="program-image">
+                    <h3 class="program-title">Beginner</h3>
+                    <p class="program-text">Step-by-step guides for people new to intermittent fasting, with gradual increase in fasting periods. Perfect for those starting their fasting journey.</p>
+                </div>
+                <div class="program-actions">
+                    <button class="btn btn-custom">View Guide</button>
+                    <a href="#" class="link-custom">See Info</a>
                 </div>
             </div>
         </div>
 
         <!-- Advanced Program -->
         <div class="col-md-4">
-            <div class="card h-100" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
-                <div class="card-body text-center p-4">
-                    <img src="{% static 'images/advanced.png' %}" alt="Advanced" class="img-fluid mb-4" style="max-width: 150px;">
-                    <h3 class="card-title h4 mb-3" style="color: #d81b60; font-weight: bold;">ADVANCED</h3>
-                    <p class="card-text mb-4" style="color: #555;">Programs for experienced fasters, including extended fasting and more complex protocols.</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary mb-2" style="background-color: #F3A9A8; border: none; transition: all 0.3s ease;">View Guide</button>
-                        <a href="#" class="text-decoration-none" style="color: #d81b60; transition: color 0.3s ease;">See Info</a>
-                    </div>
+            <div class="program-card">
+                <div class="program-content">
+                    <img src="{% static 'images/advanced.png' %}" alt="Advanced" class="program-image">
+                    <h3 class="program-title">Advanced</h3>
+                    <p class="program-text">Programs for experienced fasters, including extended fasting and more complex protocols. Take your fasting practice to the next level.</p>
+                </div>
+                <div class="program-actions">
+                    <button class="btn btn-custom">View Guide</button>
+                    <a href="#" class="link-custom">See Info</a>
                 </div>
             </div>
         </div>
 
         <!-- Challenger Program -->
         <div class="col-md-4">
-            <div class="card h-100" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transition: transform 0.3s ease;">
-                <div class="card-body text-center p-4">
-                    <img src="{% static 'images/challenger.png' %}" alt="Challenger" class="img-fluid mb-4" style="max-width: 150px;">
-                    <h3 class="card-title h4 mb-3" style="color: #d81b60; font-weight: bold;">CHALLENGER</h3>
-                    <p class="card-text mb-4" style="color: #555;">Offers periodic challenges, such as a 30-day fasting challenge, with rewards to motivate involvement.</p>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary mb-2" style="background-color: #F3A9A8; border: none; transition: all 0.3s ease;">View Guide</button>
-                        <a href="#" class="text-decoration-none" style="color: #d81b60; transition: color 0.3s ease;">See Info</a>
-                    </div>
+            <div class="program-card">
+                <div class="program-content">
+                    <img src="{% static 'images/challenger.png' %}" alt="Challenger" class="program-image">
+                    <h3 class="program-title">Challenger</h3>
+                    <p class="program-text">Offers periodic challenges, such as a 30-day fasting challenge, with rewards to motivate involvement. Push your limits and achieve your goals.</p>
+                </div>
+                <div class="program-actions">
+                    <button class="btn btn-custom">View Guide</button>
+                    <a href="#" class="link-custom">See Info</a>
                 </div>
             </div>
         </div>
