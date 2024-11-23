@@ -1,61 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load custom_filters %}
 
 {% block title %}BreakFast | Tracker{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link rel="icon" type="image/png" href="{% static 'images/bficon.png' %}">
-<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
 <style>
-    :root {
-        --primary-pink: #E5B5B5;
-        --dark-brown: #4A3434;
-        --light-gray: #E5E5E5;
-    }
-
-    body {
-        font-family: 'Arial', sans-serif;
-        color: var(--dark-brown);
+    .page-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         background: linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)), 
-                    url("{% static 'images/healthyfood.png' %}") no-repeat center center fixed !important;
-        background-size: cover !important;
-        margin: 0;
-        padding: 0;
-    }
-
-    body::before {
-        display: none;
-    }
-
-    .card {
-        background-color: rgba(229, 181, 181, 0.97) !important;
-        border-radius: 25px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(8px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    }
-
-    .card h2 {
-        font-family: 'Arial', sans-serif;
-        font-size: 1.5rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        color: var(--dark-brown);
-        margin-bottom: 1.5rem;
-        text-transform: capitalize;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .card h2 i {
-        font-size: 1.25em;
-        color: var(--dark-brown);
-        opacity: 0.9;
+                    url("{% static 'images/healthyfood.png' %}") no-repeat center center;
+        background-size: cover;
+        z-index: -1;
     }
 
     .timer {
@@ -67,70 +26,92 @@
     .mood-icons {
         font-size: 2rem;
         cursor: pointer;
+        transition: all 0.3s ease;
     }
 
     .mood-icons i {
-        transition: color 0.2s;
-        cursor: pointer;
+        margin: 0 0.5rem;
+        transition: all 0.3s ease;
     }
 
-    .mood-icons i:hover,
-    .mood-icons i.selected {
-        color: #4A3434;
+    .mood-icons i:hover {
+        transform: scale(1.2);
     }
 
     .energy-icons {
-        font-size: 2rem;
+        font-size: 1.5rem;
         cursor: pointer;
     }
 
     .energy-icons i {
-        transition: color 0.2s;
-        cursor: pointer;
+        margin: 0 0.25rem;
+        transition: all 0.3s ease;
     }
 
-    .energy-icons i:hover,
-    .energy-icons i.selected {
+    .energy-icons i:hover {
+        transform: scale(1.2);
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+        color: var(--dark-brown);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .card h2 i {
+        color: var(--dark-brown);
+        opacity: 0.9;
+    }
+
+    .sleep-inputs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .fasting-numbers {
+        font-size: 2rem;
+        font-weight: bold;
         color: #4A3434;
     }
-
-    .btn-custom {
-        background-color: var(--light-gray);
-        border: none;
-        padding: 10px 30px;
-        border-radius: 15px;
-        transition: background-color 0.3s;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .btn-custom:hover {
-        background-color: #d0d0d0;
-    }
-
-    .timer-progress { 
-        transform: rotate(-90deg); 
+    
+    .bg-light {
+        background-color: #f8f9fa;
     }
     
-    .timer-progress circle { 
-        transition: stroke-dashoffset 0.5s ease-in-out; 
-    }
-
-    .stat-section {
-        margin-bottom: 2rem;
-    }
-
-    .stat-section h3 {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
+    .bg-dark {
+        background-color: #343a40;
     }
 
     .input-group {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        margin-bottom: 1rem;
+    }
+
+    .input-group input {
+        width: 70px;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: var(--primary-pink);
     }
 
     .input-group label {
@@ -142,35 +123,52 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
+<div class="page-background"></div>
+
+<div class="container">
+    <div class="row pt-5">
         <!-- Timer Display -->
-        <div class="col-12 text-center mb-4">
+        <div class="col-12 text-center mb-4 ">
             <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
                 <svg class="timer-progress" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
                     <circle cx="50" cy="50" r="45" 
                         style="fill: none; stroke: #f3f3f3; stroke-width: 8;"/>
                     <circle cx="50" cy="50" r="45" 
-                        style="fill: none; stroke: #d81b60; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: calc(283 - ({{ progress_percentage|default:0|multiply:2.83 }}));"/>
+                        style="fill: none; stroke: #d81b60; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: {{ circle_offset|default:283 }};"/>
                 </svg>
                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
                     <div class="timer">
                         <span id="timer-hours">00</span>:<span id="timer-minutes">00</span>:<span id="timer-seconds">00</span>
                     </div>
-                    <div style="font-size: 1em; color: #666; margin-top: 5px;">
-                        {% if active_fast.is_paused %}Paused{% else %}Remaining{% endif %}
-                    </div>
+                    <div class="text-muted">remaining</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Timer Controls -->
-            <div class="d-flex justify-content-center gap-3 mt-3">
-                {% if active_fast %}
+        <!-- Fasting Controls -->
+        <div class="col-12 text-center mb-5">
+            {% if not active_fast %}
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="start">
+                    {% if active_plan %}
+                        <input type="hidden" name="plan_id" value="{{ active_plan.id }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>Start Fast
+                        </button>
+                    {% else %}
+                        <a href="{% url 'plan' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Set Up Fasting Plan
+                        </a>
+                    {% endif %}
+                </form>
+            {% else %}
+                <div class="btn-group">
                     {% if active_fast.is_paused %}
                         <form method="post" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="resume">
-                            <button type="submit" class="btn btn-custom">
+                            <button type="submit" class="btn btn-success me-2">
                                 <i class="fas fa-play me-2"></i>Resume
                             </button>
                         </form>
@@ -178,7 +176,7 @@
                         <form method="post" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="pause">
-                            <button type="submit" class="btn btn-custom">
+                            <button type="submit" class="btn btn-warning me-2">
                                 <i class="fas fa-pause me-2"></i>Pause
                             </button>
                         </form>
@@ -186,26 +184,14 @@
                     <form method="post" class="d-inline">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="stop">
-                        <button type="submit" class="btn btn-custom">
+                        <button type="submit" class="btn btn-danger">
                             <i class="fas fa-stop me-2"></i>Stop
                         </button>
                     </form>
-                {% else %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="start">
-                        {% if active_plan %}
-                        <input type="hidden" name="plan_id" value="{{ active_plan.id }}">
-                        {% endif %}
-                        <button type="submit" class="btn btn-custom" {% if not active_plan %}disabled{% endif %}>
-                            <i class="fas fa-play me-2"></i>Start Fast
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         </div>
-
-        <!-- Fasting Plan -->
+        <!-- Fasting Plan Summary -->
         <div class="col-md-6">
             <div class="card">
                 <h2><i class="far fa-calendar"></i> Fasting Plan</h2>
@@ -239,9 +225,11 @@
                 {% else %}
                     <p>No fasting plan selected yet. Please choose one.</p>
                 {% endif %}
-                <a href="{% url 'plan' %}" class="btn btn-custom">
-                    <i class="fas fa-edit"></i> Edit Plan
-                </a>
+                <div class="text-center">
+                    <a href="{% url 'plan' %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Plan
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -267,30 +255,31 @@
             </div>
         </div>
 
-        <!-- Physiological Stat -->
-        {% if active_fast and not active_fast.is_paused %}
+        {% if active_fast %}
+        <!-- Mood Tracking -->
         <div class="col-md-6">
             <div class="card">
-                <h2><i class="fas fa-heartbeat"></i> Physiological Stats</h2>
-                <div class="stat-section">
-                    <h3>Mood</h3>
-                    <div class="mood-icons">
-                        <i class="fas fa-angry" data-value="1" style="color: {% if mood == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 1)"></i>
-                        <i class="fas fa-frown" data-value="2" style="color: {% if mood == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 2)"></i>
-                        <i class="fas fa-meh" data-value="3" style="color: {% if mood == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 3)"></i>
-                        <i class="fas fa-smile" data-value="4" style="color: {% if mood == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 4)"></i>
-                        <i class="fas fa-laugh-beam" data-value="5" style="color: {% if mood == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 5)"></i>
-                    </div>
+                <h2><i class="fas fa-smile"></i> Mood</h2>
+                <div class="mood-icons text-center">
+                    <i class="far fa-angry" data-value="1" style="color: {% if mood == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 1)"></i>
+                    <i class="far fa-frown" data-value="2" style="color: {% if mood == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 2)"></i>
+                    <i class="far fa-meh" data-value="3" style="color: {% if mood == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 3)"></i>
+                    <i class="far fa-smile" data-value="4" style="color: {% if mood == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 4)"></i>
+                    <i class="far fa-laugh-beam" data-value="5" style="color: {% if mood == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('mood', 5)"></i>
                 </div>
-                <div class="stat-section">
-                    <h3>Energy Level</h3>
-                    <div class="energy-icons">
-                        <i class="fas fa-battery-empty" data-value="1" style="color: {% if energy == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 1)"></i>
-                        <i class="fas fa-battery-quarter" data-value="2" style="color: {% if energy == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 2)"></i>
-                        <i class="fas fa-battery-half" data-value="3" style="color: {% if energy == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 3)"></i>
-                        <i class="fas fa-battery-three-quarters" data-value="4" style="color: {% if energy == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 4)"></i>
-                        <i class="fas fa-battery-full" data-value="5" style="color: {% if energy == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 5)"></i>
-                    </div>
+            </div>
+        </div>
+
+        <!-- Energy Level -->
+        <div class="col-md-6">
+            <div class="card">
+                <h2><i class="fas fa-battery-half"></i> Energy Level</h2>
+                <div class="energy-icons text-center">
+                    <i class="fas fa-battery-empty" data-value="1" style="color: {% if energy == 1 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 1)"></i>
+                    <i class="fas fa-battery-quarter" data-value="2" style="color: {% if energy == 2 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 2)"></i>
+                    <i class="fas fa-battery-half" data-value="3" style="color: {% if energy == 3 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 3)"></i>
+                    <i class="fas fa-battery-three-quarters" data-value="4" style="color: {% if energy == 4 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 4)"></i>
+                    <i class="fas fa-battery-full" data-value="5" style="color: {% if energy == 5 %}#4A3434{% else %}#999{% endif %}" onclick="updatePhysiologicalStat('energy', 5)"></i>
                 </div>
             </div>
         </div>
@@ -319,34 +308,14 @@
 
 {% block extra_js %}
 <script>
-    // Function to get CSRF token from cookies
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // Handle physiological stat updates
     function updatePhysiologicalStat(type, value) {
-        const csrftoken = getCookie('csrftoken');
-        const formData = new FormData();
-        formData.append(type, value);
-
-        fetch('{% url "update_physiological_stats" %}', {
+        fetch('/update_physiological_stats/', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
-            body: formData
+            body: `type=${type}&value=${value}`
         })
         .then(response => response.json())
         .then(data => {
@@ -366,63 +335,39 @@
         .catch(error => console.error('Error:', error));
     }
 
-    // Handle sleep cycle updates
-    function updateSleepCycle() {
+    function updateSleepTime() {
         const hours = document.getElementById('sleep_hours').value;
         const minutes = document.getElementById('sleep_minutes').value;
-        const csrftoken = getCookie('csrftoken');
-        const formData = new FormData();
-        formData.append('sleep_hours', hours);
-        formData.append('sleep_minutes', minutes);
-
-        fetch('{% url "update_sleep_cycle" %}', {
+        
+        fetch('/update_physiological_stats/', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
-            body: formData
+            body: `type=sleep&hours=${hours}&minutes=${minutes}`
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Show success feedback (optional)
-                const sleepFeedback = document.getElementById('sleep-feedback');
-                if (sleepFeedback) {
-                    sleepFeedback.textContent = 'Sleep cycle updated!';
-                    setTimeout(() => {
-                        sleepFeedback.textContent = '';
-                    }, 2000);
-                }
+                document.getElementById('sleep-feedback').textContent = 'Sleep time updated!';
+                setTimeout(() => {
+                    document.getElementById('sleep-feedback').textContent = '';
+                }, 3000);
             }
         })
         .catch(error => console.error('Error:', error));
     }
 
-    // Add event listeners
+    // Add event listeners for sleep inputs
     document.addEventListener('DOMContentLoaded', function() {
-        // Mood icons
-        document.querySelectorAll('.mood-icons i').forEach(icon => {
-            icon.addEventListener('click', function() {
-                updatePhysiologicalStat('mood', this.dataset.value);
-            });
-        });
-
-        // Energy icons
-        document.querySelectorAll('.energy-icons i').forEach(icon => {
-            icon.addEventListener('click', function() {
-                updatePhysiologicalStat('energy', this.dataset.value);
-            });
-        });
-
-        // Sleep inputs
-        const sleepInputs = document.querySelectorAll('#sleep_hours, #sleep_minutes');
-        let timeoutId;
-        sleepInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(updateSleepCycle, 500); // Debounce the update
-            });
-        });
+        const sleepHours = document.getElementById('sleep_hours');
+        const sleepMinutes = document.getElementById('sleep_minutes');
+        
+        if (sleepHours && sleepMinutes) {
+            sleepHours.addEventListener('change', updateSleepTime);
+            sleepMinutes.addEventListener('change', updateSleepTime);
+        }
     });
 
     function updateTimer(endTime) {
@@ -434,7 +379,6 @@
             document.getElementById('timer-hours').textContent = '00';
             document.getElementById('timer-minutes').textContent = '00';
             document.getElementById('timer-seconds').textContent = '00';
-            document.getElementById('remaining-hours').textContent = '0.0';
             return;
         }
 
@@ -442,26 +386,16 @@
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        // Update timer display
-        document.getElementById('timer-hours').textContent = hours.toString().padStart(2, '0');
-        document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
-        document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
-        
-        // Update remaining hours
-        const remainingHours = distance / (1000 * 60 * 60);
-        document.getElementById('remaining-hours').textContent = remainingHours.toFixed(1);
-        
-        // Update progress circle
-        const totalDuration = {{ active_fast.end_time|date:'U'|default:0 }} - {{ active_fast.start_time|date:'U'|default:0 }};
-        const elapsed = now / 1000 - {{ active_fast.start_time|date:'U'|default:0 }};
-        const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-        const circle = document.querySelector('.timer-progress circle:last-child');
-        circle.style.strokeDashoffset = `calc(283 - (${progress} * 2.83))`;
+        document.getElementById('timer-hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('timer-minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('timer-seconds').textContent = String(seconds).padStart(2, '0');
     }
 
-    {% if active_fast and not active_fast.is_paused %}
-        const endTime = "{{ active_fast.end_time|date:'c' }}";
+    {% if active_fast and not active_fast.completed and not active_fast.is_paused %}
+        // Update timer every second
+        const endTime = new Date('{{ active_fast.end_time|date:"c" }}');
         setInterval(() => updateTimer(endTime), 1000);
+        updateTimer(endTime);  // Initial update
     {% endif %}
 </script>
 {% endblock %}

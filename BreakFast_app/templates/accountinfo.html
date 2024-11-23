@@ -18,15 +18,6 @@
         padding: 0;
     }
 
-    .form-container {
-        max-width: 600px;
-        margin: 2rem auto;
-        padding: 2rem;
-        background-color: rgba(229, 181, 181, 0.97);
-        border-radius: 25px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-    }
-
     .form-title {
         font-family: 'Arial', sans-serif;
         font-size: 2rem;
@@ -113,7 +104,7 @@
                                     {% csrf_token %}
                                     {{ form|crispy }}
                                     <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <button type="submit" class="btn btn-primary w-100 mt-3">Save Changes</button>
                                     </div>
                                 </form>
                             </div>

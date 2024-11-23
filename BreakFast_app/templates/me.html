@@ -3,109 +3,275 @@
 
 {% block title %}BreakFast | Me{% endblock %}
 
+{% block extra_css %}
+<style>
+    .calendar-day {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        margin: 0 auto;
+        font-size: 0.9rem;
+    }
+
+    .calendar-day.today {
+        background-color: #F3A9A8;
+        color: white;
+        font-weight: bold;
+    }
+
+    .calendar-day.has-fast {
+        border: 2px solid #F3A9A8;
+    }
+
+    .calendar-day.text-muted {
+        color: #adb5bd !important;
+    }
+
+    .fasting-numbers {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4A3434;
+    }
+
+    .stat-card {
+        background: rgba(243, 169, 168, 0.1);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .progress-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+
+    .progress-circle-bg {
+        fill: none;
+        stroke: rgba(243, 169, 168, 0.2);
+        stroke-width: 4;
+    }
+
+    .progress-circle-value {
+        fill: none;
+        stroke: #F3A9A8;
+        stroke-width: 4;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.3s ease;
+    }
+
+    .log-item {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        background: rgba(243, 169, 168, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .log-item:hover {
+        background: rgba(243, 169, 168, 0.1);
+    }
+
+    .survey-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .survey-card h5 {
+        color: #4A3434;
+        margin-bottom: 1rem;
+    }
+
+    .survey-stat {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .survey-stat i {
+        margin-right: 0.5rem;
+        color: #F3A9A8;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-5" style="background: linear-gradient(to bottom, #ffffff, #F3A9A8); min-height: calc(100vh - 56px);">
+<div class="container-fluid py-5" style="min-height: calc(100vh - 56px);">
     <div class="container">
-        <div class="row">
+        <div class="row g-4">
             <!-- Left Section -->
-            <div class="col-md-4 position-relative">
-                <h1 class="display-4 fw-bold mb-2">Hello</h1>
-                <h2 class="display-5 mb-4" style="color: #d81b60;">{{ user.first_name|default:"Athena" }}</h2>
-                
-                <div class="position-relative mb-4" style="aspect-ratio: 1;">
-                    <img src="{% static 'images/ategurl_nbg.png' %}" alt="Fitness illustration" class="img-fluid w-100 h-100" style="object-fit: contain;">
+            <div class="col-lg-4">
+                <div class="card shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h1 class="display-6 fw-bold mb-2">Hello</h1>
+                        <h2 class="h3 mb-4" style="color: #d81b60;">{{ user.first_name|default:"Athena" }}</h2>
+                        
+                        <div class="text-center mb-4">
+                            <img src="{% static 'images/ategurl_nbg.png' %}" alt="Profile" class="img-fluid" style="max-width: 200px;">
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Completed Fasts</h6>
+                            <span class="badge bg-success rounded-pill">{{ completed_fasts }}</span>
+                        </div>
+                        
+                        <a href="{% url 'personalinfo' %}" class="btn btn-outline-secondary w-100 mt-4">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </div>
                 </div>
-                
-                <a href="{% url 'personalinfo' %}" class="position-absolute bottom-0 start-0 p-3" style="color: #555; transition: color 0.3s ease;">
-                    <i class="fas fa-cog fa-lg"></i>
-                </a>
+
+                <!-- Weight Logs -->
+                <div class="card shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Recent Weight Logs</h5>
+                        {% for log in weight_logs %}
+                        <div class="log-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ log.weight }} kg</span>
+                                <small class="text-muted">{{ log.date|date:"M d" }}</small>
+                            </div>
+                            {% if log.notes %}
+                            <div class="small text-muted mt-1">
+                                {{ log.notes }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No weight logs yet</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Daily Survey Section -->
+                {% if not daily_survey %}
+                <div class="card shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h3 class="h4 fw-bold mb-4">Daily Survey</h3>
+                        <div id="survey-errors"></div>
+                        <form id="dailySurveyForm" method="post" action="{% url 'submit_daily_survey' %}">
+                            {% csrf_token %}
+                            {% for field in survey_form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger small">
+                                    {{ field.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary w-100">Submit Survey</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Right Section -->
-            <div class="col-md-8">
-                <h3 class="display-5 fw-bold mb-4">October</h3>
-                
-                <!-- Calendar -->
-                <div class="row g-3 mb-5 text-center">
-                    {% for day in weekdays %}
-                        <div class="col">
-                            <div class="fw-medium text-muted">{{ day }}</div>
-                        </div>
-                    {% endfor %}
-                    
-                    {% for date in dates %}
-                        <div class="col">
-                            <div class="fs-4 fw-bold {% if date == highlighted_date %}rounded-3 p-2{% endif %}" 
-                                 style="{% if date == highlighted_date %}background-color: #F3A9A8;{% endif %}">
-                                {{ date }}
+            <div class="col-lg-8">
+                <!-- Calendar Section -->
+                <div class="card shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h3 class="h4 fw-bold mb-4">{{ current_month }}</h3>
+                        
+                        <div class="row g-3 text-center mb-3">
+                            {% for day in weekdays %}
+                            <div class="col">
+                                <div class="text-muted small">{{ day }}</div>
                             </div>
+                            {% endfor %}
                         </div>
-                    {% endfor %}
+                        
+                        {% for week in calendar_weeks %}
+                        <div class="row g-3 text-center">
+                            {% for date in week %}
+                            <div class="col">
+                                <div class="calendar-day {% if not date.is_current_month %}text-muted opacity-25{% endif %} {% if date.is_today %}today{% endif %} {% if date.has_fast %}has-fast{% endif %}">
+                                    {{ date.day }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <!-- Fasting Card -->
-                <div class="card shadow-lg rounded-4">
-                    <div class="card-body p-0">
-                        <div class="p-4 mb-4" style="background-color: #F3A9A8; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                            <h4 class="fs-4 fw-medium mb-3">You are fasting today for</h4>
-                            <p class="display-4 fw-bold mb-0">3 hours</p>
-                        </div>
-
-                        <div class="px-4 pb-4">
-                            <div class="row align-items-center">
-                                <!-- Progress Circle -->
-                                <div class="col-auto">
-                                    <div class="position-relative" style="width: 120px; height: 120px;">
-                                        <div class="position-absolute top-50 start-50 translate-middle text-center">
-                                            <div class="fs-4 fw-bold mb-1">12.5%</div>
-                                            <div class="text-muted">Progress</div>
-                                        </div>
-                                        <svg class="position-absolute top-0 start-0" viewBox="0 0 36 36" width="120" height="120">
-                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                  fill="none"
-                                                  stroke="#F3A9A8"
-                                                  stroke-width="2"
-                                                  stroke-dasharray="12.5, 100"
-                                                  style="transform: rotate(-90deg); transform-origin: center;"/>
-                                        </svg>
-                                    </div>
+                <!-- Recent Surveys -->
+                <div class="card shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h3 class="h4 fw-bold mb-4">Recent Surveys</h3>
+                        {% if recent_surveys %}
+                            {% for survey in recent_surveys %}
+                            <div class="survey-card">
+                                <h5>{{ survey.date|date:"F j, Y" }}</h5>
+                                <div class="survey-stat">
+                                    <i class="fas fa-bed"></i>
+                                    <span>Sleep: {{ survey.hours_of_sleep }} hours</span>
                                 </div>
-
-                                <!-- Stats -->
-                                <div class="col">
-                                    <div class="row g-3">
-                                        <div class="col-sm-6">
-                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
-                                                <div class="text-muted mb-1">Start Time</div>
-                                                <div class="fs-5 fw-bold">6:00 AM</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
-                                                <div class="text-muted mb-1">End Time</div>
-                                                <div class="fs-5 fw-bold">9:00 AM</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
-                                                <div class="text-muted mb-1">Calories Burned</div>
-                                                <div class="fs-5 fw-bold">150 kcal</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <div class="p-3 rounded-3" style="background-color: rgba(243, 169, 168, 0.1);">
-                                                <div class="text-muted mb-1">Water Intake</div>
-                                                <div class="fs-5 fw-bold">500 ml</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="survey-stat">
+                                    <i class="fas fa-smile"></i>
+                                    <span>Mood: {{ survey.get_mood_display }}</span>
                                 </div>
+                                <div class="survey-stat">
+                                    <i class="fas fa-battery-three-quarters"></i>
+                                    <span>Energy: {{ survey.get_energy_level_display }}</span>
+                                </div>
+                                {% if survey.notes %}
+                                <div class="mt-2 small text-muted">
+                                    {{ survey.notes }}
+                                </div>
+                                {% endif %}
                             </div>
-                        </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No recent surveys available</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#dailySurveyForm').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.status === 'success') {
+                    window.location.href = response.redirect_url;
+                } else {
+                    // Show error messages in form
+                    let errorHtml = '';
+                    for (let field in response.errors) {
+                        errorHtml += `<div class="alert alert-danger">${field}: ${response.errors[field].join(', ')}</div>`;
+                    }
+                    $('#survey-errors').html(errorHtml);
+                }
+            },
+            error: function(xhr) {
+                $('#survey-errors').html('<div class="alert alert-danger">Error submitting survey. Please try again.</div>');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

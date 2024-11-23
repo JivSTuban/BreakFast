@@ -4,7 +4,6 @@ from .models import (
     FastingTracker,
     UserProfile,
     WeightLog,
-    SleepLog,
     Program,
     UserProgram
 )
@@ -32,12 +31,6 @@ class UserProfileAdmin(admin.ModelAdmin):
 class WeightLogAdmin(admin.ModelAdmin):
     list_display = ('user', 'weight', 'body_fat', 'date')
     list_filter = ('date', 'user')
-    search_fields = ('user__username', 'notes')
-
-@admin.register(SleepLog)
-class SleepLogAdmin(admin.ModelAdmin):
-    list_display = ('user', 'sleep_time', 'wake_time', 'quality')
-    list_filter = ('quality', 'user')
     search_fields = ('user__username', 'notes')
 
 @admin.register(Program)

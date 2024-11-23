@@ -28,12 +28,12 @@ class FastingPlan(models.Model):
     ]
     
     name = models.CharField(max_length=50)
-    plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, default='16:8')
-    fasting_hours = models.IntegerField()
-    eating_hours = models.IntegerField()
+    plan_type = models.CharField(max_length=20, choices=PLAN_TYPES)
+    fasting_hours = models.IntegerField(null=True, blank=True)
+    eating_hours = models.IntegerField(null=True, blank=True)
     fasting_days = models.IntegerField(null=True, blank=True)  # For 5:2 diet
     eating_days = models.IntegerField(null=True, blank=True)   # For 5:2 diet
-    description = models.TextField()
+    description = models.TextField(blank=True)
     is_preset = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -42,22 +42,25 @@ class FastingPlan(models.Model):
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        if self.fasting_days and self.eating_days:
+        if self.plan_type == '5:2' and self.fasting_days and self.eating_days:
             return f"{self.name} ({self.fasting_days}:{self.eating_days} days)"
         return f"{self.name} ({self.fasting_hours}:{self.eating_hours} hours)"
 
 class FastingTracker(models.Model):
     MOOD_CHOICES = [
-        (1, 'Bad'),
-        (2, 'Okay'),
-        (3, 'Good')
+        (1, 'Very Bad'),
+        (2, 'Bad'),
+        (3, 'Neutral'),
+        (4, 'Good'),
+        (5, 'Very Good')
     ]
     
     ENERGY_CHOICES = [
         (1, 'Very Low'),
         (2, 'Low'),
         (3, 'Medium'),
-        (4, 'High')
+        (4, 'High'),
+        (5, 'Very High')
     ]
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -71,12 +74,11 @@ class FastingTracker(models.Model):
     actual_end_time = models.DateTimeField(null=True, blank=True)  # In case user ends early
     is_paused = models.BooleanField(default=False)
     pause_time = models.DateTimeField(null=True, blank=True)
-    
-    # New fields for enhanced tracking
-    hunger_level = models.IntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
-    water_intake = models.FloatField(help_text="Water intake in liters", null=True, blank=True)
+    is_fasting = models.BooleanField(default=True)  # True for fasting window, False for eating window
+
+    # Exercise tracking
     exercise_duration = models.IntegerField(help_text="Exercise duration in minutes", null=True, blank=True)
-    stress_level = models.IntegerField(choices=[(i, i) for i in range(1, 6)], null=True, blank=True)
+    water_intake = models.FloatField(help_text="Water intake in liters", null=True, blank=True)
 
     def __str__(self):
         return f"{self.created_by.email}'s fast - {self.start_time.date()}"
@@ -200,33 +202,20 @@ class WeightLog(models.Model):
         ordering = ['-date']
 
     def __str__(self):
-        return f"{self.user.username}'s weight on {self.date}"
+        return f"{self.user.username} - {self.weight}kg on {self.date}"
 
-class SleepLog(models.Model):
-    QUALITY_CHOICES = [
-        (1, 'Very Poor'),
-        (2, 'Poor'),
-        (3, 'Fair'),
-        (4, 'Good'),
-        (5, 'Excellent')
-    ]
-
+class DailySurvey(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    sleep_time = models.DateTimeField()
-    wake_time = models.DateTimeField()
-    quality = models.IntegerField(choices=QUALITY_CHOICES, default=3)
-    notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    date = models.DateField(default=timezone.now)
+    hours_of_sleep = models.FloatField(null=True, blank=True)
+    minutes_of_sleep = models.IntegerField(null=True, blank=True)
+    mood = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)], null=True, blank=True)
+    energy_level = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)], null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-sleep_time']
-
-    def get_duration(self):
-        return self.wake_time - self.sleep_time
-
-    def get_duration_hours(self):
-        duration = self.get_duration()
-        return duration.total_seconds() / 3600  # Convert to hours
+        unique_together = ['user', 'date']
+        ordering = ['-date']
 
     def __str__(self):
-        return f"{self.user.username}'s sleep - {self.sleep_time.date()}"
+        return f"{self.user.email}'s survey on {self.date}"

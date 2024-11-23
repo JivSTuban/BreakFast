@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import SignupForm, LoginForm, CustomFastingPlanForm, PersonalInfoForm, AccountInfoForm
-from .models import FastingPlan, FastingTracker, UserProfile, SleepLog
+from .forms import SignupForm, LoginForm, CustomFastingPlanForm, PersonalInfoForm, AccountInfoForm, DailySurveyForm
+from .models import FastingPlan, FastingTracker, UserProfile, WeightLog, DailySurvey
 from django.urls import reverse
 from django.utils import timezone
 from django.http import JsonResponse
@@ -56,151 +56,166 @@ def home(request):
 
 @login_required
 def tracker(request):
-    # Get active fast that is not completed and not paused
-    active_fast = FastingTracker.objects.filter(
-        created_by=request.user,
-        completed=False,
-    ).first()
+    context = {}
+    
+    if request.user.is_authenticated:
+        active_plan = FastingPlan.objects.filter(created_by=request.user, is_active=True).first()
+        active_fast = FastingTracker.objects.filter(created_by=request.user, completed=False).first()
+        
+        # Get today's survey data
+        today_survey = DailySurvey.objects.filter(
+            user=request.user,
+            date=timezone.now().date()
+        ).first()
+        
+        context.update({
+            'active_plan': active_plan,
+            'active_fast': active_fast,
+            'mood': today_survey.mood if today_survey else None,
+            'energy': today_survey.energy_level if today_survey else None,
+            'sleep_hours': today_survey.hours_of_sleep if today_survey else 0,
+            'sleep_minutes': today_survey.minutes_of_sleep if today_survey else 0,
+        })
+        
+        if active_fast:
+            # Calculate progress circle offset
+            if not active_fast.is_paused:
+                total_duration = (active_fast.end_time - active_fast.start_time).total_seconds()
+                elapsed = (timezone.now() - active_fast.start_time).total_seconds()
+                progress = min(100, max(0, (elapsed / total_duration) * 100))
+                context['circle_offset'] = 283 - (progress * 2.83)  # 283 is the circle's circumference
+            else:
+                context['circle_offset'] = 283  # Show empty circle when paused
 
-    # Get the user's active plan
-    active_plan = FastingPlan.objects.filter(
-        created_by=request.user,
-        is_active=True
-    ).first()
+        # Get active fast that is not completed and not paused
+        active_fast = FastingTracker.objects.filter(
+            created_by=request.user,
+            completed=False,
+        ).first()
 
-    # Calculate remaining hours
-    remaining_hours = 0
-    if active_fast and not active_fast.is_paused:
-        if active_fast.completed:
-            remaining_hours = 0
-        else:
-            time_diff = active_fast.end_time - timezone.now()
-            remaining_hours = time_diff.total_seconds() / 3600
+        # Get the user's active plan
+        active_plan = FastingPlan.objects.filter(
+            created_by=request.user,
+            is_active=True
+        ).first()
 
-    # Get latest sleep log
-    latest_sleep = SleepLog.objects.filter(user=request.user).order_by('-wake_time').first()
-    sleep_hours = 0
-    sleep_minutes = 0
-    if latest_sleep:
-        duration = latest_sleep.wake_time - latest_sleep.sleep_time
-        sleep_hours = duration.seconds // 3600
-        sleep_minutes = (duration.seconds % 3600) // 60
+        # Calculate remaining hours
+        remaining_hours = 0
 
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        
-        if action == 'start':
-            if not active_fast:
-                plan_id = request.POST.get('plan_id')
-                if plan_id:  # Only proceed if plan_id is not empty
-                    try:
-                        plan = FastingPlan.objects.get(id=plan_id, is_active=True)
-                        # Create new fasting tracker
-                        if plan.plan_type == '5:2':
-                            # For 5:2 diet, end time is end of day
-                            end_time = timezone.now().replace(hour=23, minute=59, second=59)
-                        else:
-                            # For hourly-based plans
-                            end_time = timezone.now() + timezone.timedelta(hours=plan.fasting_hours)
-                        
-                        active_fast = FastingTracker.objects.create(
-                            created_by=request.user,
-                            plan=plan,
-                            start_time=timezone.now(),
-                            end_time=end_time
-                        )
-                        messages.success(request, "Fasting started successfully!")
-                    except FastingPlan.DoesNotExist:
-                        messages.error(request, "Selected fasting plan not found or not active.")
-                else:
-                    messages.error(request, "Please select a fasting plan first.")
-        
-        elif action == 'stop':
-            if active_fast:
-                active_fast.completed = True
-                active_fast.actual_end_time = timezone.now()
-                active_fast.save()
-                
-                # Update user profile stats if it exists
-                try:
-                    profile = request.user.userprofile
-                    profile.total_fasts += 1
-                    current_duration = active_fast.get_duration().total_seconds() / 3600  # Convert to hours
-                    profile.longest_fast = max(profile.longest_fast, current_duration)
-                    profile.save()
-                except UserProfile.DoesNotExist:
-                    pass  # User profile doesn't exist
-                messages.success(request, "Fasting stopped successfully!")
-        
-        elif action == 'pause':
-            if active_fast and not active_fast.is_paused:
-                active_fast.is_paused = True
-                active_fast.pause_time = timezone.now()
-                active_fast.save()
-                messages.success(request, "Fasting paused!")
-        
-        elif action == 'resume':
-            if active_fast and active_fast.is_paused:
-                pause_duration = timezone.now() - active_fast.pause_time
-                active_fast.end_time += pause_duration
-                active_fast.is_paused = False
-                active_fast.pause_time = None
-                active_fast.save()
-                messages.success(request, "Fasting resumed!")
-        
-        elif action == 'update_mood':
-            if active_fast:
-                mood = request.POST.get('mood')
-                energy = request.POST.get('energy')
-                if mood:
-                    active_fast.mood = int(mood)
-                if energy:
-                    active_fast.energy_level = int(energy)
-                active_fast.save()
-                messages.success(request, "Mood and energy updated!")
-        
-        elif action == 'update_sleep':
-            try:
-                sleep_hours = int(request.POST.get('sleep_hours', 0))
-                sleep_minutes = int(request.POST.get('sleep_minutes', 0))
-                
-                if 0 <= sleep_hours <= 23 and 0 <= sleep_minutes <= 59:
-                    # Create a new sleep log
-                    wake_time = timezone.now()
-                    sleep_time = wake_time - timezone.timedelta(hours=sleep_hours, minutes=sleep_minutes)
+        if active_fast and not active_fast.is_paused:
+            if active_fast.completed:
+                remaining_hours = 0
+            else:
+                time_diff = active_fast.end_time - timezone.now()
+                remaining_hours = time_diff.total_seconds() / 3600
+
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            
+            if action == 'start':
+                if not active_fast:
+                    plan_id = request.POST.get('plan_id')
+                    if plan_id:  # Only proceed if plan_id is not empty
+                        try:
+                            plan = FastingPlan.objects.get(id=plan_id, is_active=True)
+                            # Create new fasting tracker
+                            if plan.plan_type == '5:2':
+                                # For 5:2 diet, end time is end of day
+                                end_time = timezone.now().replace(hour=23, minute=59, second=59)
+                            else:
+                                # For hourly-based plans
+                                end_time = timezone.now() + timezone.timedelta(hours=plan.fasting_hours)
+                            
+                            active_fast = FastingTracker.objects.create(
+                                created_by=request.user,
+                                plan=plan,
+                                start_time=timezone.now(),
+                                end_time=end_time,
+                                is_fasting=True  # Start with fasting window
+                            )
+                            messages.success(request, "Fasting started!")
+                        except FastingPlan.DoesNotExist:
+                            messages.error(request, "Selected fasting plan not found or not active.")
+                    else:
+                        messages.error(request, "Please select a fasting plan first.")
+            
+            elif action == 'stop':
+                if active_fast:
+                    active_fast.completed = True
+                    active_fast.actual_end_time = timezone.now()
+                    active_fast.save()
                     
-                    SleepLog.objects.create(
-                        user=request.user,
-                        sleep_time=sleep_time,
-                        wake_time=wake_time,
-                        quality=5  # Default quality, you can add this as a field in the form if needed
-                    )
-                    messages.success(request, "Sleep time logged successfully!")
-                else:
-                    messages.error(request, "Please enter valid sleep hours (0-23) and minutes (0-59).")
-            except (ValueError, TypeError):
-                messages.error(request, "Please enter valid numbers for sleep duration.")
-        
-        return redirect('tracker')
+                    # Update user profile stats if it exists
+                    try:
+                        profile = request.user.userprofile
+                        profile.total_fasts += 1
+                        current_duration = active_fast.get_duration().total_seconds() / 3600  # Convert to hours
+                        profile.longest_fast = max(profile.longest_fast, current_duration)
+                        profile.save()
+                    except UserProfile.DoesNotExist:
+                        pass  # User profile doesn't exist
+                    messages.success(request, "Fasting stopped successfully!")
+            
+            elif action == 'pause':
+                if active_fast and not active_fast.is_paused:
+                    active_fast.is_paused = True
+                    active_fast.pause_time = timezone.now()
+                    active_fast.save()
+                    messages.success(request, "Fasting paused!")
+            
+            elif action == 'resume':
+                if active_fast and active_fast.is_paused:
+                    pause_duration = timezone.now() - active_fast.pause_time
+                    active_fast.end_time += pause_duration
+                    active_fast.is_paused = False
+                    active_fast.pause_time = None
+                    active_fast.save()
+                    messages.success(request, "Fasting resumed!")
+            
+            elif action == 'update_mood':
+                if active_fast:
+                    mood = request.POST.get('mood')
+                    energy = request.POST.get('energy')
+                    
+                    if mood:
+                        active_fast.mood = int(mood)
+                    if energy:
+                        active_fast.energy_level = int(energy)
+                    
+                    active_fast.save()
+                    messages.success(request, "Mood and energy updated!")
 
-    # Calculate progress percentage for the timer circle
-    progress_percentage = 0
-    if active_fast and not active_fast.completed:
-        if active_fast.is_paused:
-            elapsed = active_fast.pause_time - active_fast.start_time
-        else:
-            elapsed = timezone.now() - active_fast.start_time
-        total_duration = active_fast.end_time - active_fast.start_time
-        progress_percentage = min(100, max(0, (elapsed.total_seconds() / total_duration.total_seconds()) * 100))
+            elif action == 'update_sleep':
+                if active_fast:
+                    sleep_hours = request.POST.get('sleep_hours')
+                    sleep_minutes = request.POST.get('sleep_minutes')
+                    
+                    if sleep_hours is not None and sleep_minutes is not None:
+                        try:
+                            active_fast.sleep_hours = int(sleep_hours)
+                            active_fast.sleep_minutes = int(sleep_minutes)
+                            active_fast.save()
+                            return JsonResponse({'status': 'success'})
+                        except ValueError:
+                            return JsonResponse({'status': 'error', 'message': 'Invalid sleep values'})
+                    
+                return JsonResponse({'status': 'error', 'message': 'Missing sleep values'})
+            
+            return redirect('tracker')
 
-    context = {
-        'active_fast': active_fast,
-        'active_plan': active_plan,
-        'remaining_hours': remaining_hours,
-        'progress_percentage': progress_percentage,
-        'sleep_hours': sleep_hours,
-        'sleep_minutes': sleep_minutes,
-    }
+        # Calculate progress percentage for the timer circle
+        progress_percentage = 0
+        if active_fast and not active_fast.completed:
+            if active_fast.is_paused:
+                elapsed = active_fast.pause_time - active_fast.start_time
+            else:
+                elapsed = timezone.now() - active_fast.start_time
+            total_duration = active_fast.end_time - active_fast.start_time
+            progress_percentage = min(100, max(0, (elapsed.total_seconds() / total_duration.total_seconds()) * 100))
+
+        context['remaining_hours'] = remaining_hours
+        context['progress_percentage'] = progress_percentage
+
     return render(request, 'tracker.html', context)
 
 @login_required
@@ -236,6 +251,8 @@ def plan(request):
                 plan_type=request.POST.get('plan_type'),
                 fasting_hours=request.POST.get('fasting_hours'),
                 eating_hours=request.POST.get('eating_hours'),
+                fasting_days=request.POST.get('fasting_days'),
+                eating_days=request.POST.get('eating_days'),
                 description=request.POST.get('description'),
                 created_by=request.user,
                 is_preset=True,
@@ -253,7 +270,7 @@ def plan(request):
                 
                 plan = form.save(commit=False)
                 plan.created_by = request.user
-                plan.is_preset = False
+                plan.is_preset = False  # Explicitly set is_preset to False for custom plans
                 plan.is_active = True
                 plan.save()
                 messages.success(request, 'Custom plan created and activated!')
@@ -274,16 +291,94 @@ def program(request):
 
 @login_required
 def me(request):
+    user_profile = request.user.userprofile
+    today = timezone.now().date()
+    current_month = timezone.now().strftime('%B %Y')
+    
+    # Get daily survey for today if it exists
+    daily_survey = DailySurvey.objects.filter(user=request.user, date=today).first()
+    
+    # Get last 7 days of surveys
+    recent_surveys = DailySurvey.objects.filter(
+        user=request.user,
+        date__gte=today - timezone.timedelta(days=7)
+    ).order_by('-date')
+    
+    # Get recent weight logs
+    weight_logs = WeightLog.objects.filter(user=request.user).order_by('-date')[:5]
+    
+    # Get completed fasts count
+    completed_fasts = FastingTracker.objects.filter(
+        created_by=request.user,
+        completed=True
+    ).count()
+    
+    # Calendar data
+    import calendar
+    cal = calendar.Calendar(firstweekday=calendar.MONDAY)
+    month_days = cal.monthdatescalendar(today.year, today.month)
+    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    
+    # Get all fasting days in current month
+    fasting_days = FastingTracker.objects.filter(
+        created_by=request.user,
+        start_time__year=today.year,
+        start_time__month=today.month
+    ).values_list('start_time__day', flat=True)
+    
+    # Process calendar data
+    calendar_weeks = []
+    for week in month_days:
+        week_days = []
+        for date in week:
+            if date.month == today.month:
+                week_days.append({
+                    'day': date.day,
+                    'is_today': date == today,
+                    'has_fast': date.day in fasting_days,
+                    'is_current_month': True
+                })
+            else:
+                week_days.append({
+                    'day': date.day,
+                    'is_today': False,
+                    'has_fast': False,
+                    'is_current_month': False
+                })
+        calendar_weeks.append(week_days)
+    
     context = {
-        'weekdays': ['Mon', 'Tues', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        'dates': ['8', '9', '10', '11', '12', '13', '14'],
-        'highlighted_date': '11'
+        'user_profile': user_profile,
+        'daily_survey': daily_survey,
+        'recent_surveys': recent_surveys,
+        'survey_form': DailySurveyForm() if not daily_survey else None,
+        'weight_logs': weight_logs,
+        'completed_fasts': completed_fasts,
+        'current_month': current_month,
+        'weekdays': weekdays,
+        'calendar_weeks': calendar_weeks
     }
+    
     return render(request, 'me.html', context)
 
 @login_required
-def landing(request):
-    return render(request, 'landing.html')
+def submit_daily_survey(request):
+    today = timezone.now().date()
+    survey = DailySurvey.objects.filter(user=request.user, date=today).first()
+    
+    if request.method == 'POST':
+        form = DailySurveyForm(request.POST, instance=survey)
+        if form.is_valid():
+            survey = form.save(commit=False)
+            survey.user = request.user
+            survey.date = today
+            survey.save()
+            messages.success(request, 'Daily survey submitted successfully!')
+            return JsonResponse({'status': 'success', 'redirect_url': reverse('me')})
+        return JsonResponse({'status': 'error', 'errors': form.errors})
+    
+    form = DailySurveyForm(instance=survey)
+    return render(request, 'daily_survey.html', {'form': form})
 
 @login_required
 def personalinfo(request):
@@ -321,55 +416,41 @@ def accountinfo(request):
 @login_required
 def update_physiological_stats(request):
     if request.method == 'POST':
-        active_fast = FastingTracker.objects.filter(
-            created_by=request.user,
-            completed=False
-        ).first()
-
-        if active_fast:
-            mood = request.POST.get('mood')
-            energy = request.POST.get('energy')
-            
-            if mood:
-                active_fast.mood = int(mood)
-            if energy:
-                active_fast.energy_level = int(energy)
-            
-            active_fast.save()
-            return JsonResponse({'status': 'success'})
-    
-    return JsonResponse({'status': 'error'}, status=400)
-
-@login_required
-def update_sleep_cycle(request):
-    if request.method == 'POST':
         try:
-            sleep_hours = int(request.POST.get('sleep_hours', 0))
-            sleep_minutes = int(request.POST.get('sleep_minutes', 0))
+            stat_type = request.POST.get('type')
+            value = request.POST.get('value')
             
-            if 0 <= sleep_hours <= 23 and 0 <= sleep_minutes <= 59:
-                wake_time = timezone.now()
-                sleep_time = wake_time - timezone.timedelta(hours=sleep_hours, minutes=sleep_minutes)
+            # Get or create today's survey
+            survey, created = DailySurvey.objects.get_or_create(
+                user=request.user,
+                date=timezone.now().date()
+            )
+            
+            if stat_type == 'mood':
+                survey.mood = int(value)
+            elif stat_type == 'energy':
+                survey.energy_level = int(value)
+            elif stat_type == 'sleep':
+                hours = int(request.POST.get('hours', 0))
+                minutes = int(request.POST.get('minutes', 0))
+                survey.hours_of_sleep = hours
+                survey.minutes_of_sleep = minutes
                 
-                SleepLog.objects.create(
-                    user=request.user,
-                    sleep_time=sleep_time,
-                    wake_time=wake_time,
-                    quality=5  # Default quality
-                )
-                return JsonResponse({'status': 'success'})
-            else:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Please enter valid sleep hours (0-23) and minutes (0-59).'
-                }, status=400)
-        except (ValueError, TypeError):
+            survey.save()
+            return JsonResponse({'status': 'success'})
+            
+        except (ValueError, TypeError) as e:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Please enter valid numbers for sleep duration.'
+                'message': str(e)
             }, status=400)
     
     return JsonResponse({'status': 'error'}, status=400)
+
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    return render(request, 'landing.html')
 
 def logout_view(request):
     logout(request)

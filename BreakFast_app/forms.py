@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, FastingPlan, FastingTracker, SleepLog, WeightLog, UserProfile, UserProgram
+from .models import User, FastingPlan, FastingTracker, WeightLog, UserProfile, UserProgram, DailySurvey
 import re
 from django.utils import timezone
 
@@ -57,11 +57,11 @@ class CustomFastingPlanForm(forms.ModelForm):
         fields = ['name', 'plan_type', 'fasting_hours', 'eating_hours', 'fasting_days', 'eating_days', 'description', 'start_date', 'end_date']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Plan Name', 'class': 'form-control'}),
-            'plan_type': forms.Select(attrs={'class': 'form-control'}),
-            'fasting_hours': forms.NumberInput(attrs={'min': '1', 'max': '23', 'class': 'form-control'}),
-            'eating_hours': forms.NumberInput(attrs={'min': '1', 'max': '23', 'class': 'form-control'}),
-            'fasting_days': forms.NumberInput(attrs={'min': '1', 'max': '6', 'class': 'form-control'}),
-            'eating_days': forms.NumberInput(attrs={'min': '1', 'max': '6', 'class': 'form-control'}),
+            'plan_type': forms.Select(attrs={'class': 'form-control', 'id': 'plan_type'}),
+            'fasting_hours': forms.NumberInput(attrs={'min': '1', 'max': '23', 'class': 'form-control', 'id': 'fasting_hours'}),
+            'eating_hours': forms.NumberInput(attrs={'min': '1', 'max': '23', 'class': 'form-control', 'id': 'eating_hours'}),
+            'fasting_days': forms.NumberInput(attrs={'min': '1', 'max': '6', 'class': 'form-control', 'id': 'fasting_days'}),
+            'eating_days': forms.NumberInput(attrs={'min': '1', 'max': '6', 'class': 'form-control', 'id': 'eating_days'}),
             'description': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Plan Description', 'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
@@ -77,24 +77,28 @@ class CustomFastingPlanForm(forms.ModelForm):
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
 
-        if plan_type != '5:2':
-            # For hourly-based plans
-            if fasting_hours and eating_hours:
-                if fasting_hours + eating_hours != 24:
-                    raise forms.ValidationError('Fasting hours and eating hours must sum to 24')
-                if fasting_hours < 1 or fasting_hours > 23:
-                    raise forms.ValidationError('Fasting hours must be between 1 and 23')
-                if eating_hours < 1 or eating_hours > 23:
-                    raise forms.ValidationError('Eating hours must be between 1 and 23')
-        else:
+        if plan_type == '5:2':
             # For 5:2 diet
-            if fasting_days and eating_days:
-                if fasting_days + eating_days != 7:
-                    raise forms.ValidationError('Fasting days and eating days must sum to 7')
-                if fasting_days < 1 or fasting_days > 6:
-                    raise forms.ValidationError('Fasting days must be between 1 and 6')
-                if eating_days < 1 or eating_days > 6:
-                    raise forms.ValidationError('Eating days must be between 1 and 6')
+            if not fasting_days or not eating_days:
+                raise forms.ValidationError('Please specify both fasting and eating days for 5:2 diet')
+            if fasting_days + eating_days != 7:
+                raise forms.ValidationError('Fasting days and eating days must sum to 7')
+            if fasting_days < 1 or fasting_days > 6:
+                raise forms.ValidationError('Fasting days must be between 1 and 6')
+            # Clear hourly fields for 5:2 diet
+            cleaned_data['fasting_hours'] = None
+            cleaned_data['eating_hours'] = None
+        else:
+            # For hourly-based plans
+            if not fasting_hours or not eating_hours:
+                raise forms.ValidationError('Please specify both fasting and eating hours')
+            if fasting_hours + eating_hours != 24:
+                raise forms.ValidationError('Fasting hours and eating hours must sum to 24')
+            if fasting_hours < 1 or fasting_hours > 23:
+                raise forms.ValidationError('Fasting hours must be between 1 and 23')
+            # Clear daily fields for hourly plans
+            cleaned_data['fasting_days'] = None
+            cleaned_data['eating_days'] = None
 
         if start_date and end_date and start_date > end_date:
             raise forms.ValidationError('End date must be after start date')
@@ -110,28 +114,6 @@ class MoodEnergyTrackerForm(forms.ModelForm):
             'energy_level': forms.Select(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'How are you feeling today?'})
         }
-
-class SleepLogForm(forms.ModelForm):
-    class Meta:
-        model = SleepLog
-        fields = ['sleep_time', 'wake_time', 'quality', 'notes']
-        widgets = {
-            'sleep_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'wake_time': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
-            'quality': forms.Select(attrs={'class': 'form-control'}, choices=[(i, i) for i in range(1, 6)]),
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Any notes about your sleep?'})
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        sleep_time = cleaned_data.get('sleep_time')
-        wake_time = cleaned_data.get('wake_time')
-        
-        if sleep_time and wake_time:
-            if wake_time <= sleep_time:
-                raise forms.ValidationError('Wake time must be after sleep time')
-        
-        return cleaned_data
 
 class WeightLogForm(forms.ModelForm):
     class Meta:
@@ -194,4 +176,16 @@ class AccountInfoForm(forms.ModelForm):
             'body_fat': forms.NumberInput(attrs={'class': 'form-control', 'style': 'border: 1px solid #ddd; border-radius: 0.5rem; padding: 0.75rem;'}),
             'goal': forms.Select(attrs={'class': 'form-control', 'style': 'border: 1px solid #ddd; border-radius: 0.5rem; padding: 0.75rem;'}),
             'activity_level': forms.Select(attrs={'class': 'form-control', 'style': 'border: 1px solid #ddd; border-radius: 0.5rem; padding: 0.75rem;'})
+        }
+
+class DailySurveyForm(forms.ModelForm):
+    class Meta:
+        model = DailySurvey
+        fields = ['hours_of_sleep', 'minutes_of_sleep', 'mood', 'energy_level', 'notes']
+        widgets = {
+            'hours_of_sleep': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '23'}),
+            'minutes_of_sleep': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '59'}),
+            'mood': forms.Select(attrs={'class': 'form-select'}),
+            'energy_level': forms.Select(attrs={'class': 'form-select'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'How are you feeling today?'})
         }

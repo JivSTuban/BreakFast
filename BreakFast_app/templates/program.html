@@ -5,12 +5,12 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     body {
         font-family: 'Arial', sans-serif;
         color: var(--dark-brown);
-        background: linear-gradient(rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)), 
-                    url("{% static 'images/healthyfood.png' %}") no-repeat center center fixed !important;
+        background: #FFFFFF;
         background-size: cover !important;
         min-height: 100vh;
         margin: 0;
@@ -30,20 +30,21 @@
 
     .program-card {
         background-color: rgba(229, 181, 181, 0.97) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border: none !important;
         border-radius: 25px;
         padding: 2.5rem;
         margin-bottom: 2rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s ease;
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
 
     .program-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
     }
 
     .program-title {
@@ -70,9 +71,11 @@
         border-radius: 15px !important;
         font-weight: 500 !important;
         font-size: 1.1rem !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        transition: all 0.3s ease !important;
         width: 100%;
         margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
     }
 
     .btn-custom:hover {
@@ -80,18 +83,46 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
+    .btn-custom::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300%;
+        height: 300%;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.5s ease;
+        transform: translate(-50%, -50%) scale(0);
+        border-radius: 50%;
+    }
+
+    .btn-custom:hover::after {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
     .link-custom {
         color: var(--dark-brown);
         text-decoration: none;
         font-weight: 500;
         font-size: 1.1rem;
-        transition: color 0.2s ease;
-        display: inline-block;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
         padding: 0.5rem 0;
     }
 
     .link-custom:hover {
         color: #6b4c4c;
+        transform: translateX(5px);
+    }
+
+    .link-custom i {
+        margin-right: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .link-custom:hover i {
+        transform: translateX(3px);
     }
 
     .program-image {
@@ -103,7 +134,7 @@
     }
 
     .program-card:hover .program-image {
-        transform: scale(1.05);
+        transform: scale(1.1) rotate(5deg);
     }
 
     .container {
@@ -149,7 +180,7 @@
                 </div>
                 <div class="program-actions">
                     <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom">See Info</a>
+                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
                 </div>
             </div>
         </div>
@@ -164,7 +195,7 @@
                 </div>
                 <div class="program-actions">
                     <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom">See Info</a>
+                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
                 </div>
             </div>
         </div>
@@ -179,7 +210,7 @@
                 </div>
                 <div class="program-actions">
                     <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom">See Info</a>
+                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
                 </div>
             </div>
         </div>
