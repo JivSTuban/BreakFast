@@ -89,17 +89,46 @@
         font-size: 3rem;
         color: #adb5bd;
     }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0.5rem;
+        }
+        
+        .card {
+            margin: 0.5rem;
+        }
+
+        .col-md-4.bg-light {
+            border-end: none !important;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .p-4 {
+            padding: 1rem !important;
+        }
+
+        h2.h4 {
+            font-size: 1.25rem;
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-10 mx-auto">
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
             <div class="card shadow-lg" style="border-radius: 1rem; overflow: hidden;">
                 <div class="row g-0">
                     <!-- Sidebar -->
-                    <div class="col-md-4 bg-light border-end">
+                    <div class="col-12 col-md-4 bg-light border-end">
                         <div class="p-4">
                             <a href="{% url 'me' %}" class="text-decoration-none d-flex align-items-center gap-2 mb-4" style="color: #555;">
                                 <i class="fas fa-arrow-left"></i> Back
@@ -117,7 +146,7 @@
                     </div>
                     
                     <!-- Main Content -->
-                    <div class="col-md-8">
+                    <div class="col-12 col-md-8">
                         <div class="p-4">
                             <h2 class="h4 mb-4">Personal Information</h2>
                             <div class="text-center">
