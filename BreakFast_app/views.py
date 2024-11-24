@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import SignupForm, LoginForm, CustomFastingPlanForm, PersonalInfoForm, AccountInfoForm, DailySurveyForm
-from .models import FastingPlan, FastingTracker, UserProfile, WeightLog, DailySurvey
+from .models import User, UserProfile, FastingPlan, FastingTracker, WeightLog, DailySurvey
 from django.urls import reverse
 from django.utils import timezone
 from django.http import JsonResponse
@@ -37,6 +37,8 @@ def signup(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Create UserProfile for the new user
+            UserProfile.objects.create(user=user)
             # Set the backend for the user
             user.backend = 'BreakFast_app.backends.EmailBackend'
             auth_login(request, user)
