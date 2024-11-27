@@ -100,54 +100,52 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-3">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-10">
-            <div class="card shadow-lg" style="border-radius: 1rem; overflow: hidden;">
-                <div class="row g-0">
-                    <!-- Sidebar -->
-                    <div class="col-12 col-md-4 bg-light border-end">
-                        <div class="p-4">
-                            <a href="{% url 'personalinfo' %}" class="text-decoration-none d-flex align-items-center gap-2 mb-4" style="color: #555;">
-                                <i class="fas fa-arrow-left"></i> Back
-                            </a>
-                            <h2 class="h4 mb-4" style="color: #444;">Account Details</h2>
-                            <ul class="list-unstyled">
-                                <li class="mb-3">
-                                    <a href="{% url 'personalinfo' %}" class="text-decoration-none d-block p-2 rounded" style="color: #444; transition: all 0.3s ease;">Personal Information</a>
-                                </li>
-                                <li class="mb-3">
-                                    <span class="d-block p-2 rounded" style="background-color: #F3A9A8; color: white;">Account Information</span>
-                                </li>
-                            </ul>
-                        </div>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        <div class="card shadow-lg" style="border-radius: 1rem; overflow: hidden;">
+            <div class="row g-0">
+                <!-- Sidebar -->
+                <div class="col-12 col-md-4 bg-light border-end">
+                    <div class="p-4">
+                        <a href="{% url 'personalinfo' %}" class="text-decoration-none d-flex align-items-center gap-2 mb-4" style="color: #555;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <h2 class="h4 mb-4" style="color: #444;">Account Details</h2>
+                        <ul class="list-unstyled">
+                            <li class="mb-3">
+                                <a href="{% url 'personalinfo' %}" class="text-decoration-none d-block p-2 rounded" style="color: #444; transition: all 0.3s ease;">Personal Information</a>
+                            </li>
+                            <li class="mb-3">
+                                <span class="d-block p-2 rounded" style="background-color: #F3A9A8; color: white;">Account Information</span>
+                            </li>
+                        </ul>
                     </div>
-                    
-                    <!-- Main Content -->
-                    <div class="col-12 col-md-8">
-                        <div class="p-4">
-                            <h2 class="h4 mb-4">Account Information</h2>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="col-12 col-md-8">
+                    <div class="p-4">
+                        <h2 class="h4 mb-4">Account Information</h2>
 
-                            {% if messages %}
-                            <div class="messages mb-4">
-                                {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }}" role="alert">
-                                    {{ message }}
+                        {% if messages %}
+                        <div class="messages mb-4">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}" role="alert">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-container">
+                            <h1 class="form-title">Account Information</h1>
+                            <form method="post" class="mb-4">
+                                {% csrf_token %}
+                                {{ form|crispy }}
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-primary w-100 mt-3">Save Changes</button>
                                 </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            <div class="form-container">
-                                <h1 class="form-title">Account Information</h1>
-                                <form method="post" class="mb-4">
-                                    {% csrf_token %}
-                                    {{ form|crispy }}
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-primary w-100 mt-3">Save Changes</button>
-                                    </div>
-                                </form>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>

@@ -108,140 +108,136 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5" style="min-height: calc(100vh - 56px);">
-    <div class="container">
-        <div class="row g-4">
-            <!-- Left Section -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <h1 class="display-6 fw-bold mb-2">Hello</h1>
-                        <h2 class="h3 mb-4" style="color: #d81b60;">{{ user.first_name|default:"Athena" }}</h2>
-                        
-                        <div class="text-center mb-4">
-                            <img src="{% static 'images/ategurl_nbg.png' %}" alt="Profile" class="img-fluid" style="max-width: 200px;">
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">Completed Fasts</h6>
-                            <span class="badge bg-success rounded-pill">{{ completed_fasts }}</span>
-                        </div>
-                        
-                        <a href="{% url 'personalinfo' %}" class="btn btn-outline-secondary w-100 mt-4">
-                            <i class="fas fa-cog me-2"></i>Settings
-                        </a>
-                    </div>
+<div class="row g-4">
+    <!-- Left Section -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <h1 class="display-6 fw-bold mb-2">Hello</h1>
+                <h2 class="h3 mb-4" style="color: #d81b60;">{{ user.first_name|default:"Athena" }}</h2>
+                
+                <div class="text-center mb-4">
+                    <img src="{% static 'images/ategurl_nbg.png' %}" alt="Profile" class="img-fluid" style="max-width: 200px;">
                 </div>
 
-                <!-- Weight Logs -->
-                <div class="card shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Recent Weight Logs</h5>
-                        {% for log in weight_logs %}
-                        <div class="log-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>{{ log.weight }} kg</span>
-                                <small class="text-muted">{{ log.date|date:"M d" }}</small>
-                            </div>
-                            {% if log.notes %}
-                            <div class="small text-muted mt-1">
-                                {{ log.notes }}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% empty %}
-                        <p class="text-muted">No weight logs yet</p>
-                        {% endfor %}
-                    </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Completed Fasts</h6>
+                    <span class="badge bg-success rounded-pill">{{ completed_fasts }}</span>
                 </div>
-
-                <!-- Daily Survey Section -->
-                {% if not daily_survey %}
-                <div class="card shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <h3 class="h4 fw-bold mb-4">Daily Survey</h3>
-                        <div id="survey-errors"></div>
-                        <form id="dailySurveyForm" method="post" action="{% url 'submit_daily_survey' %}">
-                            {% csrf_token %}
-                            {% for field in survey_form %}
-                            <div class="mb-3">
-                                <label class="form-label">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                <div class="text-danger small">
-                                    {{ field.errors|join:", " }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary w-100">Submit Survey</button>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
+                
+                <a href="{% url 'personalinfo' %}" class="btn btn-outline-secondary w-100 mt-4">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </a>
             </div>
+        </div>
 
-            <!-- Right Section -->
-            <div class="col-lg-8">
-                <!-- Calendar Section -->
-                <div class="card shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <h3 class="h4 fw-bold mb-4">{{ current_month }}</h3>
-                        
-                        <div class="row g-3 text-center mb-3">
-                            {% for day in weekdays %}
-                            <div class="col">
-                                <div class="text-muted small">{{ day }}</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        
-                        {% for week in calendar_weeks %}
-                        <div class="row g-3 text-center">
-                            {% for date in week %}
-                            <div class="col">
-                                <div class="calendar-day {% if not date.is_current_month %}text-muted opacity-25{% endif %} {% if date.is_today %}today{% endif %} {% if date.has_fast %}has-fast{% endif %}">
-                                    {{ date.day }}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
+        <!-- Weight Logs -->
+        <div class="card shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Recent Weight Logs</h5>
+                {% for log in weight_logs %}
+                <div class="log-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>{{ log.weight }} kg</span>
+                        <small class="text-muted">{{ log.date|date:"M d" }}</small>
                     </div>
+                    {% if log.notes %}
+                    <div class="small text-muted mt-1">
+                        {{ log.notes }}
+                    </div>
+                    {% endif %}
                 </div>
+                {% empty %}
+                <p class="text-muted">No weight logs yet</p>
+                {% endfor %}
+            </div>
+        </div>
 
-                <!-- Recent Surveys -->
-                <div class="card shadow-sm rounded-4 mb-4">
-                    <div class="card-body">
-                        <h3 class="h4 fw-bold mb-4">Recent Surveys</h3>
-                        {% if recent_surveys %}
-                            {% for survey in recent_surveys %}
-                            <div class="survey-card">
-                                <h5>{{ survey.date|date:"F j, Y" }}</h5>
-                                <div class="survey-stat">
-                                    <i class="fas fa-bed"></i>
-                                    <span>Sleep: {{ survey.hours_of_sleep }} hours</span>
-                                </div>
-                                <div class="survey-stat">
-                                    <i class="fas fa-smile"></i>
-                                    <span>Mood: {{ survey.get_mood_display }}</span>
-                                </div>
-                                <div class="survey-stat">
-                                    <i class="fas fa-battery-three-quarters"></i>
-                                    <span>Energy: {{ survey.get_energy_level_display }}</span>
-                                </div>
-                                {% if survey.notes %}
-                                <div class="mt-2 small text-muted">
-                                    {{ survey.notes }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted">No recent surveys available</p>
+        <!-- Daily Survey Section -->
+        {% if not daily_survey %}
+        <div class="card shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <h3 class="h4 fw-bold mb-4">Daily Survey</h3>
+                <div id="survey-errors"></div>
+                <form id="dailySurveyForm" method="post" action="{% url 'submit_daily_survey' %}">
+                    {% csrf_token %}
+                    {% for field in survey_form %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small">
+                            {{ field.errors|join:", " }}
+                        </div>
                         {% endif %}
                     </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Submit Survey</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Section -->
+    <div class="col-lg-8">
+        <!-- Calendar Section -->
+        <div class="card shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <h3 class="h4 fw-bold mb-4">{{ current_month }}</h3>
+                
+                <div class="row g-3 text-center mb-3">
+                    {% for day in weekdays %}
+                    <div class="col">
+                        <div class="text-muted small">{{ day }}</div>
+                    </div>
+                    {% endfor %}
                 </div>
+                
+                {% for week in calendar_weeks %}
+                <div class="row g-3 text-center">
+                    {% for date in week %}
+                    <div class="col">
+                        <div class="calendar-day {% if not date.is_current_month %}text-muted opacity-25{% endif %} {% if date.is_today %}today{% endif %} {% if date.has_fast %}has-fast{% endif %}">
+                            {{ date.day }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Surveys -->
+        <div class="card shadow-sm rounded-4 mb-4">
+            <div class="card-body">
+                <h3 class="h4 fw-bold mb-4">Recent Surveys</h3>
+                {% if recent_surveys %}
+                    {% for survey in recent_surveys %}
+                    <div class="survey-card">
+                        <h5>{{ survey.date|date:"F j, Y" }}</h5>
+                        <div class="survey-stat">
+                            <i class="fas fa-bed"></i>
+                            <span>Sleep: {{ survey.hours_of_sleep }} hours</span>
+                        </div>
+                        <div class="survey-stat">
+                            <i class="fas fa-smile"></i>
+                            <span>Mood: {{ survey.get_mood_display }}</span>
+                        </div>
+                        <div class="survey-stat">
+                            <i class="fas fa-battery-three-quarters"></i>
+                            <span>Energy: {{ survey.get_energy_level_display }}</span>
+                        </div>
+                        {% if survey.notes %}
+                        <div class="mt-2 small text-muted">
+                            {{ survey.notes }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent surveys available</p>
+                {% endif %}
             </div>
         </div>
     </div>

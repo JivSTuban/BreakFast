@@ -4,8 +4,6 @@
 {% block title %}BreakFast | Program{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     body {
         font-family: 'Arial', sans-serif;
@@ -155,65 +153,369 @@
     }
 
     @media (min-width: 992px) {
-        .row {
-            margin: 0 -1.5rem;
+        .program-card {
+            margin-bottom: 0;
         }
-        .col-md-4 {
-            padding: 0 1.5rem;
-        }
+    }
+
+    /* Modal Styles */
+    .modal-dialog {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        background-color: rgba(255, 255, 255, 0.98);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: 2px solid rgba(229, 181, 181, 0.3);
+        padding: 1.5rem;
+        background-color: rgba(229, 181, 181, 0.2);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-title {
+        color: var(--dark-brown);
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-body h4 {
+        color: var(--dark-brown);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-body ul li {
+        padding: 0.5rem 0;
+        color: var(--dark-brown);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .modal-footer {
+        border-top: 2px solid rgba(229, 181, 181, 0.3);
+        padding: 1.5rem;
+    }
+
+    .modal-footer .btn-secondary {
+        background-color: var(--dark-brown);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .modal-footer .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #6b4c4c;
+    }
+
+    .info-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: var(--dark-brown);
+        margin-bottom: 1.5rem;
+    }
+
+    .info-highlights {
+        background-color: rgba(229, 181, 181, 0.1);
+        padding: 1.5rem;
+        border-radius: 15px;
+    }
+
+    .highlight-item {
+        margin-bottom: 1rem;
+        font-size: 1.05rem;
+        color: var(--dark-brown);
+    }
+
+    .highlight-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .highlight-item strong {
+        color: #6b4c4c;
+        margin-right: 0.5rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Choose Your Program</h1>
+<div class="row">
+    <div class="col-12">
+        <h1 class="page-title text-center mb-5">Choose Your Fasting Program</h1>
 
-    <div class="row g-4">
-        <!-- Beginner Program -->
-        <div class="col-md-4">
-            <div class="program-card">
-                <div class="program-content">
-                    <img src="{% static 'images/beginner.png' %}" alt="Beginner" class="program-image">
-                    <h3 class="program-title">Beginner</h3>
-                    <p class="program-text">Step-by-step guides for people new to intermittent fasting, with gradual increase in fasting periods. Perfect for those starting their fasting journey.</p>
-                </div>
-                <div class="program-actions">
-                    <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+        <div class="row g-4">
+            <!-- Beginner Program -->
+            <div class="col-md-4">
+                <div class="program-card">
+                    <div class="program-content">
+                        <img src="{% static 'images/beginner.png' %}" alt="Beginner" class="program-image">
+                        <h3 class="program-title">Beginner</h3>
+                        <p class="program-text">Step-by-step guides for people new to intermittent fasting, with gradual increase in fasting periods. Perfect for those starting their fasting journey.</p>
+                    </div>
+                    <div class="program-actions">
+                        <button class="btn btn-custom">View Guide</button>
+                        <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Advanced Program -->
-        <div class="col-md-4">
-            <div class="program-card">
-                <div class="program-content">
-                    <img src="{% static 'images/advanced.png' %}" alt="Advanced" class="program-image">
-                    <h3 class="program-title">Advanced</h3>
-                    <p class="program-text">Programs for experienced fasters, including extended fasting and more complex protocols. Take your fasting practice to the next level.</p>
-                </div>
-                <div class="program-actions">
-                    <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+            <!-- Advanced Program -->
+            <div class="col-md-4">
+                <div class="program-card">
+                    <div class="program-content">
+                        <img src="{% static 'images/advanced.png' %}" alt="Advanced" class="program-image">
+                        <h3 class="program-title">Advanced</h3>
+                        <p class="program-text">Programs for experienced fasters, including extended fasting and more complex protocols. Take your fasting practice to the next level.</p>
+                    </div>
+                    <div class="program-actions">
+                        <button class="btn btn-custom">View Guide</button>
+                        <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Challenger Program -->
-        <div class="col-md-4">
-            <div class="program-card">
-                <div class="program-content">
-                    <img src="{% static 'images/challenger.png' %}" alt="Challenger" class="program-image">
-                    <h3 class="program-title">Challenger</h3>
-                    <p class="program-text">Offers periodic challenges, such as a 30-day fasting challenge, with rewards to motivate involvement. Push your limits and achieve your goals.</p>
-                </div>
-                <div class="program-actions">
-                    <button class="btn btn-custom">View Guide</button>
-                    <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+            <!-- Challenger Program -->
+            <div class="col-md-4">
+                <div class="program-card">
+                    <div class="program-content">
+                        <img src="{% static 'images/challenger.png' %}" alt="Challenger" class="program-image">
+                        <h3 class="program-title">Challenger</h3>
+                        <p class="program-text">Offers periodic challenges, such as a 30-day fasting challenge, with rewards to motivate involvement. Push your limits and achieve your goals.</p>
+                    </div>
+                    <div class="program-actions">
+                        <button class="btn btn-custom">View Guide</button>
+                        <a href="#" class="link-custom"><i class="fas fa-info-circle"></i> See Info</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Beginner Modal -->
+<div class="modal fade" id="beginnerModal" tabindex="-1" aria-labelledby="beginnerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="beginnerModalLabel">Beginner Program Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Goal: Adapt to fasting gradually and build consistency.</h4>
+                <ul class="list-unstyled mt-3">
+                    <li class="mb-2">• Start with the 12:12 method: Fast for 12 hours (e.g., 8 PM to 8 AM) and eat during a 12-hour window.</li>
+                    <li class="mb-2">• Stay hydrated: Drink water, herbal teas, or black coffee during fasting hours.</li>
+                    <li class="mb-2">• Focus on nutritious meals: Include whole foods, lean proteins, healthy fats, and fiber in your eating window.</li>
+                    <li class="mb-2">• Ease into it: If 12:12 feels manageable, try progressing to the 16:8 method (16-hour fast, 8-hour eating window).</li>
+                    <li class="mb-2">• Listen to your body: Hunger is normal initially. Break your fast if you feel weak or unwell.</li>
+                </ul>
+                <h5 class="mt-4">General Tips:</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">• Hydration is key: Water intake helps curb hunger and supports metabolism.</li>
+                    <li class="mb-2">• Be patient: Results take time; focus on consistency.</li>
+                    <li class="mb-2">• Don't overeat: Avoid bingeing during your eating windows.</li>
+                    <li class="mb-2">• Consult a doctor: Especially if you have underlying health conditions.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Modal -->
+<div class="modal fade" id="advancedModal" tabindex="-1" aria-labelledby="advancedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="advancedModalLabel">Advanced Program Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Goal: Challenge yourself with longer fasting and refined eating habits.</h4>
+                <ul class="list-unstyled mt-3">
+                    <li class="mb-2">• Try alternate-day fasting (ADF): Alternate between fasting (consuming <500 calories) and regular eating days.</li>
+                    <li class="mb-2">• Experiment with OMAD (One Meal a Day): Fast for ~23 hours and eat one nutrient-dense meal.</li>
+                    <li class="mb-2">• Incorporate workouts: Combine fasting with light to moderate exercise, like walking or yoga, for better results.</li>
+                    <li class="mb-2">• Refine your diet: Eliminate processed foods and sugary snacks. Focus on clean, whole-food nutrition.</li>
+                    <li class="mb-2">• Monitor progress: Track weight, energy levels, and other benefits using apps or journals.</li>
+                </ul>
+                <h5 class="mt-4">General Tips:</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">• Hydration is key: Water intake helps curb hunger and supports metabolism.</li>
+                    <li class="mb-2">• Be patient: Results take time; focus on consistency.</li>
+                    <li class="mb-2">• Don't overeat: Avoid bingeing during your eating windows.</li>
+                    <li class="mb-2">• Consult a doctor: Especially if you have underlying health conditions.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Challenger Modal -->
+<div class="modal fade" id="challengerModal" tabindex="-1" aria-labelledby="challengerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="challengerModalLabel">Challenger Program Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Goal: Push limits safely while maintaining health and performance.</h4>
+                <ul class="list-unstyled mt-3">
+                    <li class="mb-2">• Longer fasts (24-72 hours): These should be done occasionally and under medical supervision.</li>
+                    <li class="mb-2">• Fasting-mimicking diet (FMD): Mimic fasting benefits by eating very low-calorie meals for 3–5 days.</li>
+                    <li class="mb-2">• Advanced fasting protocols: Explore protocols like warrior fasting (20-hour fast, 4-hour eating window) or 5:2 fasting (normal eating 5 days, very low-calorie intake for 2 days).</li>
+                    <li class="mb-2">• Tailor for goals: If training, time your meals around workouts (e.g., post-workout).</li>
+                    <li class="mb-2">• Stay mindful: Watch for signs of burnout or deficiencies; intermittent fasting should enhance health, not harm it.</li>
+                </ul>
+                <h5 class="mt-4">General Tips:</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">• Hydration is key: Water intake helps curb hunger and supports metabolism.</li>
+                    <li class="mb-2">• Be patient: Results take time; focus on consistency.</li>
+                    <li class="mb-2">• Don't overeat: Avoid bingeing during your eating windows.</li>
+                    <li class="mb-2">• Consult a doctor: Especially if you have underlying health conditions.</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modals -->
+<div class="modal fade" id="beginnerInfoModal" tabindex="-1" aria-labelledby="beginnerInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="beginnerInfoModalLabel">Beginner Program Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="info-text">Perfect for those new to intermittent fasting. Start with a gentle 12-hour fast overnight, gradually building up to longer periods. Focus on hydration and nutritious meals during eating windows. Ideal for developing sustainable fasting habits.</p>
+                <div class="info-highlights mt-3">
+                    <div class="highlight-item">
+                        <strong>Fasting Window:</strong> 12 hours
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Difficulty:</strong> Easy
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Best For:</strong> Newcomers to fasting
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="advancedInfoModal" tabindex="-1" aria-labelledby="advancedInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="advancedInfoModalLabel">Advanced Program Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="info-text">For experienced fasters ready to explore more challenging protocols. Incorporates alternate-day fasting and OMAD (One Meal A Day). Combines fasting with exercise and focuses on clean nutrition for optimal results.</p>
+                <div class="info-highlights mt-3">
+                    <div class="highlight-item">
+                        <strong>Fasting Window:</strong> 16-23 hours
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Difficulty:</strong> Moderate
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Best For:</strong> Experienced fasters
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="challengerInfoModal" tabindex="-1" aria-labelledby="challengerInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="challengerInfoModalLabel">Challenger Program Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="info-text">The ultimate fasting challenge for seasoned practitioners. Explores extended fasting periods and advanced protocols like the fasting-mimicking diet. Requires dedication and careful monitoring of health markers.</p>
+                <div class="info-highlights mt-3">
+                    <div class="highlight-item">
+                        <strong>Fasting Window:</strong> 24-72 hours
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Difficulty:</strong> Advanced
+                    </div>
+                    <div class="highlight-item">
+                        <strong>Best For:</strong> Expert fasters
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all buttons and links
+        const viewGuideButtons = document.querySelectorAll('.btn-custom');
+        const seeInfoLinks = document.querySelectorAll('.link-custom');
+        
+        // Function to show guide modal
+        function showGuideModal(index) {
+            const modalId = index === 0 ? 'beginnerModal' : 
+                           index === 1 ? 'advancedModal' : 
+                           'challengerModal';
+            
+            const modal = new bootstrap.Modal(document.getElementById(modalId));
+            modal.show();
+        }
+
+        // Function to show info modal
+        function showInfoModal(index) {
+            const modalId = index === 0 ? 'beginnerInfoModal' : 
+                           index === 1 ? 'advancedInfoModal' : 
+                           'challengerInfoModal';
+            
+            const modal = new bootstrap.Modal(document.getElementById(modalId));
+            modal.show();
+        }
+
+        // Add click event listeners to View Guide buttons
+        viewGuideButtons.forEach((button, index) => {
+            button.addEventListener('click', () => showGuideModal(index));
+        });
+
+        // Add click event listeners to See Info links
+        seeInfoLinks.forEach((link, index) => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showInfoModal(index);
+            });
+        });
+    });
+</script>
 {% endblock %}
