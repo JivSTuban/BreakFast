@@ -72,10 +72,11 @@
         
         .card {
             margin: 0.5rem;
+            border-radius: 0.75rem;
         }
 
         .col-md-4.bg-light {
-            border-end: none !important;
+            border-right: none !important;
             border-bottom: 1px solid #dee2e6;
         }
 
@@ -83,17 +84,60 @@
             padding: 1rem !important;
         }
 
-        h2.h4 {
-            font-size: 1.25rem;
-        }
-
         .form-title {
             font-size: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .form-container {
             padding: 1rem;
+        }
+
+        .form-control {
+            font-size: 0.95rem;
+            padding: 0.625rem;
+        }
+
+        .btn {
+            padding: 0.625rem 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 0.25rem;
+        }
+
+        .card {
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .p-4 {
+            padding: 0.75rem !important;
+        }
+
+        .form-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-container {
+            padding: 0.75rem;
+        }
+
+        .form-control {
+            font-size: 0.9rem;
+            padding: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+        }
+
+        h2.h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
         }
     }
 </style>

@@ -194,6 +194,7 @@ class UserProgram(models.Model):
 class WeightLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     weight = models.FloatField()
+    weight_change = models.FloatField(null=True, blank=True)  # Added field for weight change
     body_fat = models.FloatField(null=True, blank=True)
     date = models.DateField(auto_now_add=True)
     notes = models.TextField(null=True, blank=True)

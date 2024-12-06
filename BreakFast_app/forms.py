@@ -183,9 +183,27 @@ class DailySurveyForm(forms.ModelForm):
         model = DailySurvey
         fields = ['hours_of_sleep', 'minutes_of_sleep', 'mood', 'energy_level', 'notes']
         widgets = {
-            'hours_of_sleep': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '23'}),
-            'minutes_of_sleep': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '59'}),
-            'mood': forms.Select(attrs={'class': 'form-select'}),
-            'energy_level': forms.Select(attrs={'class': 'form-select'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'How are you feeling today?'})
+            'hours_of_sleep': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '23',
+                'placeholder': 'Hours'
+            }),
+            'minutes_of_sleep': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'max': '59',
+                'placeholder': 'Minutes'
+            }),
+            'mood': forms.Select(attrs={
+                'class': 'form-select'
+            }, choices=[(i, str(i)) for i in range(1, 6)]),
+            'energy_level': forms.Select(attrs={
+                'class': 'form-select'
+            }, choices=[(i, str(i)) for i in range(1, 6)]),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'How are you feeling today?'
+            })
         }

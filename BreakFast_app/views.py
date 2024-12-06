@@ -143,20 +143,60 @@ def tracker(request):
             
             elif action == 'stop':
                 if active_fast:
-                    active_fast.completed = True
-                    active_fast.actual_end_time = timezone.now()
-                    active_fast.save()
-                    
-                    # Update user profile stats if it exists
-                    try:
-                        profile = request.user.userprofile
-                        profile.total_fasts += 1
-                        current_duration = active_fast.get_duration().total_seconds() / 3600  # Convert to hours
-                        profile.longest_fast = max(profile.longest_fast, current_duration)
-                        profile.save()
-                    except UserProfile.DoesNotExist:
-                        pass  # User profile doesn't exist
-                    messages.success(request, "Fasting stopped successfully!")
+                    weight = request.POST.get('weight')
+                    if weight:
+                        try:
+                            # Create weight log
+                            weight_float = float(weight)
+                            # Get the previous weight log to calculate change
+                            previous_log = WeightLog.objects.filter(
+                                user=request.user
+                            ).order_by('-date').first()
+                            
+                            weight_change = None
+                            if previous_log:
+                                weight_change = weight_float - previous_log.weight
+                            
+                            WeightLog.objects.create(
+                                user=request.user,
+                                weight=weight_float,
+                                date=timezone.now().date(),
+                                weight_change=weight_change if weight_change is not None else 0
+                            )
+                            
+                            # Update the fast
+                            active_fast.completed = True
+                            active_fast.actual_end_time = timezone.now()
+                            active_fast.save()
+                            
+                            # Update user profile stats
+                            try:
+                                profile = request.user.userprofile
+                                profile.total_fasts += 1
+                                current_duration = active_fast.get_duration().total_seconds() / 3600
+                                profile.longest_fast = max(profile.longest_fast, current_duration)
+                                profile.save()
+                            except UserProfile.DoesNotExist:
+                                pass
+
+                            return JsonResponse({
+                                'success': True,
+                                'message': 'Fast completed and weight logged successfully!'
+                            })
+                        except ValueError:
+                            return JsonResponse({
+                                'success': False,
+                                'message': 'Invalid weight value. Please enter a valid number.'
+                            })
+                    else:
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Please enter your weight.'
+                        })
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No active fast found.'
+                })
             
             elif action == 'pause':
                 if active_fast and not active_fast.is_paused:
@@ -225,6 +265,7 @@ def plan(request):
     # Get existing plans
     user_plans = FastingPlan.objects.filter(created_by=request.user, is_preset=False)
     active_plan = FastingPlan.objects.filter(created_by=request.user, is_active=True).first()
+    form = CustomFastingPlanForm()  # Initialize form here
     
     if request.method == 'POST':
         # Handle selecting an existing plan
@@ -247,21 +288,36 @@ def plan(request):
             # Deactivate all other plans
             FastingPlan.objects.filter(created_by=request.user, is_active=True).update(is_active=False)
             
-            # Create and activate new plan
-            new_plan = FastingPlan.objects.create(
-                name=request.POST.get('name'),
-                plan_type=request.POST.get('plan_type'),
-                fasting_hours=request.POST.get('fasting_hours'),
-                eating_hours=request.POST.get('eating_hours'),
-                fasting_days=request.POST.get('fasting_days'),
-                eating_days=request.POST.get('eating_days'),
-                description=request.POST.get('description'),
-                created_by=request.user,
-                is_preset=True,
-                is_active=True
-            )
-            messages.success(request, f'{new_plan.name} has been activated!')
-            return redirect('tracker')
+            try:
+                fasting_days = request.POST.get('fasting_days')
+                fasting_days = int(fasting_days) if fasting_days else 0
+                
+                fasting_hours = request.POST.get('fasting_hours')
+                fasting_hours = int(fasting_hours) if fasting_hours else 0
+                
+                eating_hours = request.POST.get('eating_hours')
+                eating_hours = int(eating_hours) if eating_hours else 0
+                
+                eating_days = request.POST.get('eating_days')
+                eating_days = int(eating_days) if eating_days else 0
+
+                new_plan = FastingPlan.objects.create(
+                    name=request.POST.get('name'),
+                    plan_type=request.POST.get('plan_type'),
+                    fasting_hours=fasting_hours,
+                    eating_hours=eating_hours,
+                    fasting_days=fasting_days,
+                    eating_days=eating_days,
+                    description=request.POST.get('description'),
+                    created_by=request.user,
+                    is_preset=True,
+                    is_active=True
+                )
+                messages.success(request, 'New fasting plan created successfully!')
+                return redirect('tracker')  # Add redirect after success
+            except ValueError:
+                messages.error(request, 'Please enter valid numbers for fasting and eating duration.')
+                return redirect('program')
         
         # Handle custom plan creation
         else:
@@ -300,6 +356,11 @@ def me(request):
     # Get daily survey for today if it exists
     daily_survey = DailySurvey.objects.filter(user=request.user, date=today).first()
     
+    # Create survey form if no survey exists for today
+    survey_form = None
+    if not daily_survey:
+        survey_form = DailySurveyForm()
+    
     # Get last 7 days of surveys
     recent_surveys = DailySurvey.objects.filter(
         user=request.user,
@@ -307,7 +368,7 @@ def me(request):
     ).order_by('-date')
     
     # Get recent weight logs
-    weight_logs = WeightLog.objects.filter(user=request.user).order_by('-date')[:5]
+    weight_logs = WeightLog.objects.filter(user=request.user).order_by('-date')[:10]
     
     # Get completed fasts count
     completed_fasts = FastingTracker.objects.filter(
@@ -315,52 +376,54 @@ def me(request):
         completed=True
     ).count()
     
+    # Calculate weight changes
+    for i, log in enumerate(weight_logs):
+        if i < len(weight_logs) - 1:
+            log.weight_change = round(log.weight - weight_logs[i + 1].weight, 1)
+        else:
+            log.weight_change = 0
+
     # Calendar data
     import calendar
     cal = calendar.Calendar(firstweekday=calendar.MONDAY)
-    month_days = cal.monthdatescalendar(today.year, today.month)
-    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    current_date = timezone.now()
     
-    # Get all fasting days in current month
-    fasting_days = FastingTracker.objects.filter(
-        created_by=request.user,
-        start_time__year=today.year,
-        start_time__month=today.month
-    ).values_list('start_time__day', flat=True)
+    # Get all dates with completed fasts for the current month
+    fasting_dates = set(
+        FastingTracker.objects.filter(
+            created_by=request.user,
+            completed=True,
+            start_time__year=current_date.year,
+            start_time__month=current_date.month
+        ).values_list('start_time__day', flat=True)
+    )
     
-    # Process calendar data
+    # Calendar weeks
     calendar_weeks = []
+    month_days = cal.monthdatescalendar(current_date.year, current_date.month)
+    
     for week in month_days:
         week_days = []
         for date in week:
-            if date.month == today.month:
-                week_days.append({
-                    'day': date.day,
-                    'is_today': date == today,
-                    'has_fast': date.day in fasting_days,
-                    'is_current_month': True
-                })
-            else:
-                week_days.append({
-                    'day': date.day,
-                    'is_today': False,
-                    'has_fast': False,
-                    'is_current_month': False
-                })
+            week_days.append({
+                'day': date.day,
+                'is_current_month': date.month == current_date.month,
+                'is_today': date == current_date.date(),
+                'has_fast': date.day in fasting_dates
+            })
         calendar_weeks.append(week_days)
     
     context = {
+        'user': request.user,
         'user_profile': user_profile,
-        'daily_survey': daily_survey,
-        'recent_surveys': recent_surveys,
-        'survey_form': DailySurveyForm() if not daily_survey else None,
         'weight_logs': weight_logs,
         'completed_fasts': completed_fasts,
+        'daily_survey': daily_survey,
+        'survey_form': survey_form,
+        'recent_surveys': recent_surveys,
         'current_month': current_month,
-        'weekdays': weekdays,
-        'calendar_weeks': calendar_weeks
+        'calendar_weeks': calendar_weeks,
     }
-    
     return render(request, 'me.html', context)
 
 @login_required
@@ -376,8 +439,9 @@ def submit_daily_survey(request):
             survey.date = today
             survey.save()
             messages.success(request, 'Daily survey submitted successfully!')
-            return JsonResponse({'status': 'success', 'redirect_url': reverse('me')})
-        return JsonResponse({'status': 'error', 'errors': form.errors})
+            return redirect('me')
+        messages.error(request, 'Please correct the errors below.')
+        return redirect('me')
     
     form = DailySurveyForm(instance=survey)
     return render(request, 'daily_survey.html', {'form': form})
