@@ -1,0 +1,4 @@
+Django>=5.1.2
+crispy-bootstrap5>=2023.10
+django-crispy-forms>=2.1
+Pillow>=10.1.0  # For image handling
