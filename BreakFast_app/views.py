@@ -520,4 +520,16 @@ def landing(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('landing')  # Redirect to landing page after logout
+    return redirect('landing')
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        user = request.user
+        # Log the user out first
+        logout(request)
+        # Delete the user account
+        user.delete()
+        messages.success(request, 'Your account has been successfully deleted.')
+        return redirect('landing')
+    return redirect('accountinfo')

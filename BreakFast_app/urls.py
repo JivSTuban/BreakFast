@@ -16,4 +16,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('update_physiological_stats/', views.update_physiological_stats, name='update_physiological_stats'),
     path('submit_daily_survey/', views.submit_daily_survey, name='submit_daily_survey'),
+    path('delete_account/', views.delete_account, name='delete_account'),
 ]
